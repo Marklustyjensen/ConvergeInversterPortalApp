@@ -62,6 +62,7 @@ export const options = {
         session.user.propertyCode = token.propertyCode;
         session.user.position = token.position;
         session.user.name = token.name;
+        session.user.admin = token.admin;
       }
       return session;
     },

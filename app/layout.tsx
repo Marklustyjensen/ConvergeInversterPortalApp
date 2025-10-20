@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
+import AuthProvider from "../components/SessionProvider";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -93,8 +94,10 @@ export default function RootLayout({
         />
       </head>
       <body className={`${inter.className} antialiased`}>
-        <div id="root">{children}</div>
-        <div id="modal-root"></div>
+        <AuthProvider>
+          <div id="root">{children}</div>
+          <div id="modal-root"></div>
+        </AuthProvider>
       </body>
     </html>
   );
