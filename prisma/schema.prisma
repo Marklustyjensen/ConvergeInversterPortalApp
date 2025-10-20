@@ -20,4 +20,6 @@ model User {
   email String @unique
   password String
   admin Boolean @default(true)
+  resetToken String?
+  resetTokenExpiry DateTime?
 }

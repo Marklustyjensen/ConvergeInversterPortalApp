@@ -1,15 +1,16 @@
 @import "tailwindcss";
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap");
 
 :root {
-  /* Converge Hospitality Brand Colors */
-  --primary: #686868; /* Company gray for primary elements */
-  --primary-light: #7a7a7a;
-  --primary-dark: #565656;
-  --secondary: #5c9c45; /* Company green for accents */
-  --secondary-light: #6bb051;
-  --secondary-dark: #4a8239;
-  --accent: #5c9c45; /* Use company green for growth/success */
-  --accent-light: #6bb051;
+  /* Brand Colors - Hospitality & Luxury Theme */
+  --primary: #1a365d; /* Deep blue for trust and professionalism */
+  --primary-light: #2d5a87;
+  --primary-dark: #0f2642;
+  --secondary: #b8860b; /* Elegant gold for hospitality */
+  --secondary-light: #daa520;
+  --secondary-dark: #996f0a;
+  --accent: #2c5530; /* Rich green for growth */
+  --accent-light: #4a7c59;
 
   /* Neutrals */
   --background: #fafafa;
@@ -21,10 +22,10 @@
   --text-muted: #718096;
 
   /* Status colors */
-  --success: #5c9c45; /* Use company green for success */
+  --success: #38a169;
   --error: #e53e3e;
   --warning: #d69e2e;
-  --info: #686868; /* Use company gray for info */
+  --info: #3182ce;
 
   /* Shadows */
   --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
@@ -35,9 +36,9 @@
     0 8px 10px -6px rgb(0 0 0 / 0.1);
 
   /* Typography */
-  --font-sans: var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI",
-    Roboto, "Helvetica Neue", Arial, sans-serif;
-  --font-serif: var(--font-playfair), Georgia, serif;
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+  --font-serif: "Playfair Display", Georgia, serif;
   --font-mono: "JetBrains Mono", Consolas, "Liberation Mono", Menlo, Courier,
     monospace;
 }
