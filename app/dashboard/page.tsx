@@ -4,7 +4,7 @@ export default function Home() {
   return (
     <>
       <h1>Welcome to the Finance Portal</h1>
-      <SignIn />
+      <p>You have successfully signed in.</p>
     </>
   );
 }
