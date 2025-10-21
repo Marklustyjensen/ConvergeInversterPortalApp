@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import InvesterDashboard from "./investerDashboard";
+import InvestorDashboard from "./investorDashboard";
 import { useSession } from "next-auth/react";
 
 const Dashboard = () => {
@@ -18,7 +18,7 @@ const Dashboard = () => {
   return (
     <>
       {!session.user?.admin ? (
-        <InvesterDashboard />
+        <InvestorDashboard />
       ) : (
         <h1>
           Access Denied - Admin users are not allowed to access the investor
