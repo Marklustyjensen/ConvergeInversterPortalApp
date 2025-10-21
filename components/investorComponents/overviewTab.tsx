@@ -1,6 +1,48 @@
 import PropertyCard from "./propertyCard";
 
+import { useSession } from "next-auth/react";
+import { useState, useEffect } from "react";
+import { Property } from "../../types/property";
+
 export default function OverviewTab() {
+  const { data: session } = useSession();
+  const [properties, setProperties] = useState<Property[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  console.log("Current session:", session);
+
+  useEffect(() => {
+    async function fetchProperties() {
+      if (!session?.user) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        console.log("Fetching properties for user:", session.user);
+        const response = await fetch("/api/properties");
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(
+            errorData.error || `HTTP ${response.status}: ${response.statusText}`
+          );
+        }
+
+        const propertiesData = await response.json();
+        console.log("Received properties:", propertiesData);
+        setProperties(propertiesData);
+      } catch (err) {
+        console.error("Error fetching properties:", err);
+        setError(err instanceof Error ? err.message : "An error occurred");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchProperties();
+  }, [session]);
   return (
     <div className="space-y-8">
       {/* Welcome Section */}
@@ -22,11 +64,25 @@ export default function OverviewTab() {
         <h3 className="text-2xl font-bold text-slate-800 mb-6">
           Your Hotel Properties
         </h3>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <PropertyCard />
-          <PropertyCard />
-          <PropertyCard />
-        </div>
+        {loading ? (
+          <div className="text-center py-8">
+            <p className="text-slate-600">Loading your properties...</p>
+          </div>
+        ) : error ? (
+          <div className="text-center py-8">
+            <p className="text-red-600">Error: {error}</p>
+          </div>
+        ) : properties.length === 0 ? (
+          <div className="text-center py-8">
+            <p className="text-slate-600">No properties found.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {properties.map((property: Property) => (
+              <PropertyCard key={property.id} property={property} />
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Recent Activity */}

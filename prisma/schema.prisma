@@ -36,6 +36,10 @@ model Property {
   zip         String
   code        String   @unique
   
+  // Image fields
+  primaryImage String?  // Main property image filename
+  images       String[] // Array of image filenames
+  
   // Many-to-many relationship through UserProperty
   userProperties UserProperty[]
 }

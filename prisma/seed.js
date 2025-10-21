@@ -54,6 +54,8 @@ async function main() {
         state: "CO",
         zip: "80014",
         code: "DENAU",
+        primaryImage: "Fairfield Inn & Suites by Marriott - Aurora, CO.webp",
+        images: ["Fairfield Inn & Suites by Marriott - Aurora, CO.webp"],
       },
       {
         name: "Fairfield Inn & Suites by Marriott - Des Moines, IA",
@@ -62,6 +64,9 @@ async function main() {
         state: "IA",
         zip: "50309",
         code: "DSMFD",
+        primaryImage:
+          "Fairfield Inn & Suites by Marriott - Des Moines, IA.webp",
+        images: ["Fairfield Inn & Suites by Marriott - Des Moines, IA.webp"],
       },
       {
         name: "Courtyard Sherman - Sherman, TX",
@@ -70,6 +75,8 @@ async function main() {
         state: "TX",
         zip: "75092",
         code: "PNxCY",
+        primaryImage: "Courtyard Sherman - Sherman, TX.webp",
+        images: ["Courtyard Sherman - Sherman, TX.webp"],
       },
       {
         name: "La Posada Lodge & Casitas - Tucson, AZ",
@@ -78,6 +85,8 @@ async function main() {
         state: "AZ",
         zip: "85704",
         code: "az.389",
+        primaryImage: "La Posada Lodge & Casitas - Tucson, AZ.webp",
+        images: ["La Posada Lodge & Casitas - Tucson, AZ.webp"],
       },
     ],
   });

@@ -20,18 +20,16 @@ export const options = {
         });
 
         if (user && user.password === credentials.password) {
-          // if (!user.active) {
-          //   throw new Error("User is inactive. Please contact support.");
-          // }
-          return {
+          console.log("Authorize function - database user:", user);
+          const userToReturn = {
             id: user.id,
             name: user.name,
             username: user.username,
             email: user.email,
             admin: user.admin,
-            //Link to related properties?
-            // phone: user.phone,
           };
+          console.log("Authorize function - returning user:", userToReturn);
+          return userToReturn;
         }
         throw new Error("Invalid username or password");
       },
@@ -41,29 +39,27 @@ export const options = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
+        console.log("JWT callback - user from authorize:", user);
         token.id = user.id;
         token.name = user.name;
         token.username = user.username;
         token.email = user.email;
         token.admin = user.admin;
-        // token.phone = user.phone;
+        console.log("JWT callback - token after update:", token);
       }
       return token;
     },
 
     async session({ session, token }) {
+      console.log("Session callback - token:", token);
       if (token) {
         session.user.id = token.id;
         session.user.username = token.username;
-        session.user.property = token.property;
         session.user.email = token.email;
-        session.user.phone = token.phone;
-        session.user.propertyAddress = token.propertyAddress;
-        session.user.propertyCode = token.propertyCode;
-        session.user.position = token.position;
         session.user.name = token.name;
         session.user.admin = token.admin;
       }
+      console.log("Session callback - session after update:", session);
       return session;
     },
 
