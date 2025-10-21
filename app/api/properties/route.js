@@ -7,6 +7,7 @@ const prisma = new PrismaClient();
 
 export async function GET() {
   try {
+    console.log("=== PROPERTIES API CALLED ===");
     const session = await getServerSession(options);
 
     console.log("=== DEBUG SESSION ===");
@@ -65,9 +66,12 @@ export async function GET() {
     console.log("Returning properties:", properties);
     return NextResponse.json(properties);
   } catch (error) {
+    console.error("=== PROPERTIES API ERROR ===");
     console.error("Error fetching properties:", error);
+    console.error("Error stack:", error.stack);
+    console.error("Error message:", error.message);
     return NextResponse.json(
-      { error: "Failed to fetch properties" },
+      { error: "Failed to fetch properties", details: error.message },
       { status: 500 }
     );
   }

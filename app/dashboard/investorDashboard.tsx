@@ -7,6 +7,7 @@ import DashboardHeader from "@/components/investorComponents/header";
 import DashboardMenuTabs from "@/components/investorComponents/menuTabs";
 import OverviewTab from "@/components/investorComponents/overviewTab";
 import DocumentTab from "@/components/investorComponents/documentTab";
+import StarReportTab from "@/components/investorComponents/startReportTab";
 
 export default function InvestorDashboard() {
   const [activeTab, setActiveTab] = useState("overview");
@@ -39,20 +40,25 @@ export default function InvestorDashboard() {
         {/* Overview Tab */}
         {activeTab === "overview" && <OverviewTab />}
 
+        {/* Star Report Tab */}
+        {activeTab === "star report" && <StarReportTab />}
+
         {/* Documents Tab */}
         {activeTab === "documents" && <DocumentTab />}
 
         {/* Placeholder for other tabs */}
-        {activeTab !== "overview" && activeTab !== "documents" && (
-          <div className="luxury-card p-8 text-center">
-            <h2 className="text-2xl font-bold text-slate-800 mb-4">
-              {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Section
-            </h2>
-            <p className="text-slate-600">
-              This section is under development. More features coming soon.
-            </p>
-          </div>
-        )}
+        {activeTab !== "overview" &&
+          activeTab !== "documents" &&
+          activeTab !== "star report" && (
+            <div className="luxury-card p-8 text-center">
+              <h2 className="text-2xl font-bold text-slate-800 mb-4">
+                {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Section
+              </h2>
+              <p className="text-slate-600">
+                This section is under development. More features coming soon.
+              </p>
+            </div>
+          )}
       </main>
     </div>
   );
