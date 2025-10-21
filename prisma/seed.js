@@ -34,6 +34,13 @@ async function main() {
         password: "1234",
         admin: false,
       },
+      {
+        name: "Lukas Jensen",
+        username: "Lukas",
+        email: "marklustyjensen@gmail.com",
+        password: "1234",
+        admin: false,
+      },
     ],
   });
 
@@ -86,57 +93,27 @@ async function main() {
   // Create sample user-property relationships
   await prisma.userProperty.createMany({
     data: [
-      // Adam is an owner/manager in Aurora and Des Moines
+      // Lukas is an owner in Aurora and Des Moines
       {
-        userId: findUser("Adam Dobmeier").id,
+        userId: findUser("Lukas Jensen").id,
         propertyId: findProperty("DENAU").id,
-        role: "owner",
-        investment: 500000,
-        percentage: 40.0,
       },
       {
-        userId: findUser("Adam Dobmeier").id,
+        userId: findUser("Lukas Jensen").id,
         propertyId: findProperty("DSMFD").id,
-        role: "owner",
-        investment: 450000,
-        percentage: 35.0,
-      },
-      // Ambur is an owner/manager in Sherman and Tucson
-      {
-        userId: findUser("Ambur Jensen").id,
-        propertyId: findProperty("PNxCY").id,
-        role: "owner",
-        investment: 600000,
-        percentage: 45.0,
-      },
-      {
-        userId: findUser("Ambur Jensen").id,
-        propertyId: findProperty("az.389").id,
-        role: "owner",
-        investment: 400000,
-        percentage: 30.0,
       },
       // Mark is an investor in multiple properties
       {
         userId: findUser("Mark Jensen").id,
         propertyId: findProperty("DENAU").id,
-        role: "investor",
-        investment: 100000,
-        percentage: 15.0,
       },
       {
         userId: findUser("Mark Jensen").id,
         propertyId: findProperty("DSMFD").id,
-        role: "investor",
-        investment: 75000,
-        percentage: 12.0,
       },
       {
         userId: findUser("Mark Jensen").id,
         propertyId: findProperty("PNxCY").id,
-        role: "investor",
-        investment: 125000,
-        percentage: 18.0,
       },
     ],
   });
