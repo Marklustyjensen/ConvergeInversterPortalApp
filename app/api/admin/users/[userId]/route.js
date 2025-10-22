@@ -58,6 +58,19 @@ export async function DELETE(request, { params }) {
       );
     }
 
+    // Check if user exists first
+    const existingUser = await prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        userProperties: true,
+      },
+    });
+
+    if (!existingUser) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    // Delete the user (cascade should handle UserProperty records)
     await prisma.user.delete({
       where: { id: userId },
     });
@@ -65,8 +78,19 @@ export async function DELETE(request, { params }) {
     return NextResponse.json({ message: "User deleted successfully" });
   } catch (error) {
     console.error("Admin user DELETE error:", error);
+
+    // Provide more detailed error information
+    let errorMessage = "Internal server error";
+    if (error.code === "P2003") {
+      errorMessage = "Cannot delete user due to related records";
+    } else if (error.code === "P2025") {
+      errorMessage = "User not found";
+    } else if (error.message) {
+      errorMessage = error.message;
+    }
+
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: errorMessage, details: error.message },
       { status: 500 }
     );
   }

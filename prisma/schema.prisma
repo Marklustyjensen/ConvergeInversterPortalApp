@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -14,33 +8,27 @@ datasource db {
 }
 
 model User {
-  id               String @id @default(uuid())
+  id               String         @id @default(uuid())
   name             String?
-  username         String @unique
-  email            String @unique
+  username         String         @unique
+  email            String         @unique
   password         String
-  admin            Boolean @default(false)
+  admin            Boolean        @default(false)
   resetToken       String?
   resetTokenExpiry DateTime?
-  
-  // Many-to-many relationship through UserProperty
   userProperties   UserProperty[]
 }
 
 model Property {
-  id          String   @id @default(uuid())
-  name        String
-  address     String
-  city        String
-  state       String
-  zip         String
-  code        String   @unique
-  
-  // Image fields
-  primaryImage String?  // Main property image filename
-  images       String[] // Array of image filenames
-  
-  // Many-to-many relationship through UserProperty
+  id             String         @id @default(uuid())
+  name           String
+  address        String
+  city           String
+  state          String
+  zip            String
+  code           String         @unique
+  images         String[]
+  primaryImage   String?
   userProperties UserProperty[]
 }
 
@@ -48,14 +36,8 @@ model UserProperty {
   id         String   @id @default(uuid())
   userId     String
   propertyId String
-  
-  // Additional fields for the relationship
-  // percentage Float?   // ownership percentage
-  
-  // Relations
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-  
-  // Composite unique constraint to prevent duplicate relationships
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@unique([userId, propertyId])
 }

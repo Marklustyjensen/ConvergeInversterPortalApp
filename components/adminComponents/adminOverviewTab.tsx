@@ -105,7 +105,7 @@ export default function AdminOverviewTab() {
       </div>
 
       {/* Quick Actions */}
-      <div className="luxury-card p-6">
+      {/* <div className="luxury-card p-6">
         <h3 className="text-lg font-semibold text-slate-800 mb-4">
           Quick Actions
         </h3>
@@ -123,7 +123,7 @@ export default function AdminOverviewTab() {
             <span>Upload Document</span>
           </button>
         </div>
-      </div>
+      </div> */}
 
       {/* Recent Activity */}
       <div className="luxury-card p-6">
