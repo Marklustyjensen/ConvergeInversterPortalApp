@@ -34,6 +34,7 @@ export default function AdminPropertiesTab() {
   const [loading, setLoading] = useState(true);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [editingProperty, setEditingProperty] = useState<Property | null>(null);
   const [newProperty, setNewProperty] = useState<NewPropertyForm>({
     name: "",
     address: "",
@@ -66,8 +67,14 @@ export default function AdminPropertiesTab() {
     setCreating(true);
 
     try {
-      const response = await fetch("/api/admin/properties", {
-        method: "POST",
+      const url = editingProperty
+        ? `/api/admin/properties/${editingProperty.id}`
+        : "/api/admin/properties";
+
+      const method = editingProperty ? "PUT" : "POST";
+
+      const response = await fetch(url, {
+        method,
         headers: {
           "Content-Type": "application/json",
         },
@@ -77,6 +84,7 @@ export default function AdminPropertiesTab() {
       if (response.ok) {
         await fetchProperties();
         setShowCreateForm(false);
+        setEditingProperty(null);
         setNewProperty({
           name: "",
           address: "",
@@ -85,14 +93,25 @@ export default function AdminPropertiesTab() {
           zip: "",
           code: "",
         });
-        alert("Property created successfully!");
+        alert(
+          editingProperty
+            ? "Property updated successfully!"
+            : "Property created successfully!"
+        );
       } else {
         const error = await response.json();
-        alert(`Error creating property: ${error.message}`);
+        alert(
+          `Error ${editingProperty ? "updating" : "creating"} property: ${error.message}`
+        );
       }
     } catch (error) {
-      console.error("Error creating property:", error);
-      alert("Error creating property. Please try again.");
+      console.error(
+        `Error ${editingProperty ? "updating" : "creating"} property:`,
+        error
+      );
+      alert(
+        `Error ${editingProperty ? "updating" : "creating"} property. Please try again.`
+      );
     } finally {
       setCreating(false);
     }
@@ -128,6 +147,32 @@ export default function AdminPropertiesTab() {
     }
   };
 
+  const handleEditProperty = (property: Property) => {
+    setEditingProperty(property);
+    setNewProperty({
+      name: property.name,
+      address: property.address,
+      city: property.city,
+      state: property.state,
+      zip: property.zip,
+      code: property.code,
+    });
+    setShowCreateForm(true);
+  };
+
+  const handleCancelForm = () => {
+    setShowCreateForm(false);
+    setEditingProperty(null);
+    setNewProperty({
+      name: "",
+      address: "",
+      city: "",
+      state: "",
+      zip: "",
+      code: "",
+    });
+  };
+
   if (loading) {
     return (
       <div className="luxury-card p-8 text-center">
@@ -150,7 +195,10 @@ export default function AdminPropertiesTab() {
           </p>
         </div>
         <button
-          onClick={() => setShowCreateForm(true)}
+          onClick={() => {
+            setEditingProperty(null);
+            setShowCreateForm(true);
+          }}
           className="btn-primary flex items-center space-x-2"
         >
           <span>🏢</span>
@@ -163,7 +211,7 @@ export default function AdminPropertiesTab() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto">
             <h3 className="text-lg font-semibold text-slate-800 mb-4">
-              Create New Property
+              {editingProperty ? "Edit Property" : "Create New Property"}
             </h3>
             <form onSubmit={handleCreateProperty} className="space-y-4">
               <div>
@@ -264,7 +312,7 @@ export default function AdminPropertiesTab() {
               <div className="flex justify-end space-x-3 pt-4">
                 <button
                   type="button"
-                  onClick={() => setShowCreateForm(false)}
+                  onClick={handleCancelForm}
                   className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800 border border-slate-300 rounded-lg hover:bg-slate-50"
                 >
                   Cancel
@@ -274,7 +322,13 @@ export default function AdminPropertiesTab() {
                   disabled={creating}
                   className="btn-primary disabled:opacity-50"
                 >
-                  {creating ? "Creating..." : "Create Property"}
+                  {creating
+                    ? editingProperty
+                      ? "Updating..."
+                      : "Creating..."
+                    : editingProperty
+                      ? "Update Property"
+                      : "Create Property"}
                 </button>
               </div>
             </form>
@@ -324,7 +378,10 @@ export default function AdminPropertiesTab() {
                 </p>
               </div>
               <div className="flex justify-between items-center">
-                <button className="text-blue-600 hover:text-blue-900 text-sm font-medium">
+                <button
+                  onClick={() => handleEditProperty(property)}
+                  className="text-blue-600 hover:text-blue-900 text-sm font-medium"
+                >
                   Edit
                 </button>
                 <button
@@ -351,7 +408,10 @@ export default function AdminPropertiesTab() {
             Get started by creating your first property.
           </p>
           <button
-            onClick={() => setShowCreateForm(true)}
+            onClick={() => {
+              setEditingProperty(null);
+              setShowCreateForm(true);
+            }}
             className="btn-primary"
           >
             Add First Property
