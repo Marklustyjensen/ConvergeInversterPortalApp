@@ -2,6 +2,7 @@
 
 import React from "react";
 import InvestorDashboard from "./investorDashboard";
+import AdminDashboard from "./adminDashboard";
 import { useSession } from "next-auth/react";
 
 const Dashboard = () => {
@@ -16,16 +17,7 @@ const Dashboard = () => {
   }
 
   return (
-    <>
-      {!session.user?.admin ? (
-        <InvestorDashboard />
-      ) : (
-        <h1>
-          Access Denied - Admin users are not allowed to access the investor
-          dashboard
-        </h1>
-      )}
-    </>
+    <>{session.user?.admin ? <AdminDashboard /> : <InvestorDashboard />}</>
   );
 };
 
