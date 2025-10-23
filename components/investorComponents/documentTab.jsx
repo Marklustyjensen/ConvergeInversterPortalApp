@@ -58,6 +58,8 @@ export default function DocumentTab() {
         if (selectedPropertyId) {
           params.append("propertyId", selectedPropertyId);
         }
+        // Only fetch financial documents for the document tab
+        params.append("documentType", "financial");
 
         const response = await fetch(`/api/documents?${params}`);
         if (!response.ok) {

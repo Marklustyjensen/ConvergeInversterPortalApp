@@ -4,16 +4,20 @@ import { Property } from "../../types/property";
 import PropertySelector from "./PropertySelector";
 
 interface Document {
-  title: string;
+  id: string;
+  name: string;
   type: string;
-  date: string;
-  size: string;
+  size: number;
+  url: string;
+  property: {
+    id: string;
+    name: string;
+    code: string;
+  };
+  documentType: string;
   year: number;
-  month: string;
-  monthIndex: number;
-  propertyId?: string | null;
-  icon: string;
-  color: string;
+  month: number;
+  uploadDate: string;
 }
 
 export default function StarReportTab() {
@@ -21,10 +25,12 @@ export default function StarReportTab() {
   const [expandedYears, setExpandedYears] = useState(new Set(["2025"])); // Start with 2025 expanded
   const [expandedMonths, setExpandedMonths] = useState(new Set()); // Track expanded months
   const [properties, setProperties] = useState<Property[]>([]);
+  const [documents, setDocuments] = useState<Document[]>([]);
   const [selectedPropertyId, setSelectedPropertyId] = useState<string | null>(
     null
   );
   const [loading, setLoading] = useState(true);
+  const [documentsLoading, setDocumentsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Fetch properties on component mount
@@ -70,130 +76,43 @@ export default function StarReportTab() {
     fetchProperties();
   }, [session]);
 
-  // Generate multiple star report types for each month from July 2023 to June 2025
-  const generateMonthlyStarReports = (): Document[] => {
-    const documents: Document[] = [];
-    const months = [
-      "January",
-      "February",
-      "March",
-      "April",
-      "May",
-      "June",
-      "July",
-      "August",
-      "September",
-      "October",
-      "November",
-      "December",
-    ];
+  // Fetch star report documents
+  useEffect(() => {
+    async function fetchDocuments() {
+      if (!session?.user) return;
 
-    // Document types with their characteristics for star reports
-    const documentTypes = [
-      {
-        name: "Star Report",
-        frequency: 1, // Always present
-        icon: "star",
-        color: "yellow",
-      },
-      {
-        name: "Performance Analytics",
-        frequency: 1, // Always present
-        icon: "analytics",
-        color: "blue",
-      },
-      {
-        name: "Market Analysis",
-        frequency: 0.8, // 80% chance
-        icon: "market",
-        color: "green",
-      },
-      {
-        name: "Portfolio Summary",
-        frequency: 0.9, // 90% chance
-        icon: "portfolio",
-        color: "purple",
-      },
-      {
-        name: "Risk Assessment",
-        frequency: 0.6, // 60% chance
-        icon: "risk",
-        color: "red",
-      },
-      {
-        name: "Investment Forecast",
-        frequency: 0.7, // 70% chance
-        icon: "forecast",
-        color: "indigo",
-      },
-    ];
-
-    // Start from July 2023
-    let year = 2023;
-    let month = 6; // July is index 6 (0-based)
-
-    // Generate until June 2025
-    while (year < 2025 || (year === 2025 && month < 6)) {
-      const monthName = months[month];
-
-      // Generate documents for this month
-      documentTypes.forEach((docType) => {
-        // Check if this document type should be generated this month
-        if (Math.random() < docType.frequency) {
-          const fileSize = (Math.random() * 3 + 2.0).toFixed(1); // Random size between 2.0-5.0 MB
-
-          // For demo purposes, randomly assign documents to properties when available
-          let assignedPropertyId: string | null = null;
-          let propertyName = "";
-
-          if (properties.length > 0) {
-            const randomProperty =
-              properties[Math.floor(Math.random() * properties.length)];
-            assignedPropertyId = randomProperty.id;
-            propertyName = ` - ${randomProperty.name}`;
-          }
-
-          documents.push({
-            title: `${monthName} ${year} ${docType.name}${propertyName}`,
-            type: docType.name,
-            date: `${monthName.substring(0, 3)} ${Math.floor(Math.random() * 28) + 1}, ${year}`,
-            size: `${fileSize} MB`,
-            year: year,
-            month: monthName,
-            monthIndex: month,
-            propertyId: assignedPropertyId,
-            icon: docType.icon,
-            color: docType.color,
-          });
+      setDocumentsLoading(true);
+      try {
+        const params = new URLSearchParams();
+        if (selectedPropertyId) {
+          params.append("propertyId", selectedPropertyId);
         }
-      });
+        // Only fetch star reports for the start report tab
+        params.append("documentType", "star_report");
 
-      // Move to next month
-      month++;
-      if (month > 11) {
-        month = 0;
-        year++;
+        const response = await fetch(`/api/documents?${params}`);
+        if (!response.ok) {
+          console.warn("Failed to fetch documents:", response.status);
+          setDocuments([]);
+          return;
+        }
+        const documentsData = await response.json();
+        setDocuments(documentsData);
+      } catch (err) {
+        console.error("Error fetching documents:", err);
+        setDocuments([]);
+      } finally {
+        setDocumentsLoading(false);
       }
     }
 
-    // Sort by year and month (most recent first)
-    return documents.sort((a, b) => {
-      if (a.year !== b.year) {
-        return b.year - a.year;
-      }
-      return b.monthIndex - a.monthIndex;
-    });
-  };
+    fetchDocuments();
+  }, [session, selectedPropertyId]);
 
-  // Use useMemo to regenerate documents when properties change
-  const allDocuments = useMemo(() => {
-    return generateMonthlyStarReports();
-  }, [properties]);
-
-  // Filter documents based on selected property
+  // Filter documents based on selected property (documents are already filtered by star_report type from API)
   const filteredDocuments = selectedPropertyId
-    ? allDocuments.filter((doc) => doc.propertyId === selectedPropertyId)
-    : allDocuments;
+    ? documents.filter((doc) => doc.property.id === selectedPropertyId)
+    : documents;
 
   // Group documents by year and then by month
   const documentsByYearAndMonth = filteredDocuments.reduce(
@@ -205,16 +124,32 @@ export default function StarReportTab() {
       },
       doc
     ) => {
+      const monthNames = [
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December",
+      ];
+      const monthName = monthNames[doc.month - 1]; // API returns 1-based month
+
       if (!acc[doc.year]) {
         acc[doc.year] = {};
       }
-      if (!acc[doc.year][doc.month]) {
-        acc[doc.year][doc.month] = {
-          monthIndex: doc.monthIndex,
+      if (!acc[doc.year][monthName]) {
+        acc[doc.year][monthName] = {
+          monthIndex: doc.month - 1, // Convert to 0-based for sorting
           documents: [],
         };
       }
-      acc[doc.year][doc.month].documents.push(doc);
+      acc[doc.year][monthName].documents.push(doc);
       return acc;
     },
     {}
@@ -246,8 +181,8 @@ export default function StarReportTab() {
     setExpandedMonths(newExpandedMonths);
   };
 
-  // Helper function to get document icon and colors
-  const getDocumentIcon = (iconType: string, color: string) => {
+  // Helper function to get document icon and colors based on document type
+  const getDocumentIcon = (documentType: string) => {
     const colorClasses = {
       red: { bg: "bg-red-100", text: "text-red-600" },
       blue: { bg: "bg-blue-100", text: "text-blue-600" },
@@ -257,61 +192,19 @@ export default function StarReportTab() {
       indigo: { bg: "bg-indigo-100", text: "text-indigo-600" },
     };
 
-    const icons = {
-      star: (
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
-        />
-      ),
-      analytics: (
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-        />
-      ),
-      market: (
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
-        />
-      ),
-      portfolio: (
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
-        />
-      ),
-      risk: (
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-        />
-      ),
-      forecast: (
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"
-        />
-      ),
-    };
+    // Default star report icon for all star reports
+    const starIcon = (
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
+      />
+    );
 
     return {
-      icon: icons[iconType as keyof typeof icons] || icons.star,
-      colors:
-        colorClasses[color as keyof typeof colorClasses] || colorClasses.yellow,
+      icon: starIcon,
+      colors: colorClasses.yellow, // Default to yellow for star reports
     };
   };
 
@@ -344,8 +237,16 @@ export default function StarReportTab() {
             loading={loading}
           />
 
+          {/* Loading state for documents */}
+          {documentsLoading && (
+            <div className="text-center py-8">
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+              <p className="mt-2 text-slate-600">Loading star reports...</p>
+            </div>
+          )}
+
           <div className="space-y-6">
-            {years.length > 0 ? (
+            {!documentsLoading && years.length > 0 ? (
               years.map((year) => {
                 const yearData = documentsByYearAndMonth[parseInt(year)];
                 const totalDocuments = Object.values(yearData).reduce(
@@ -443,10 +344,7 @@ export default function StarReportTab() {
                                       {monthData.documents.map(
                                         (doc: Document, index: number) => {
                                           const { icon, colors } =
-                                            getDocumentIcon(
-                                              doc.icon,
-                                              doc.color
-                                            );
+                                            getDocumentIcon(doc.documentType);
                                           return (
                                             <div
                                               key={`${monthKey}-${index}`}
@@ -470,10 +368,19 @@ export default function StarReportTab() {
                                                 </span>
                                               </div>
                                               <h5 className="font-medium text-slate-800 mb-2 text-sm leading-tight">
-                                                {doc.title}
+                                                {doc.name}
                                               </h5>
                                               <p className="text-xs text-slate-500 mb-3">
-                                                {doc.date} • {doc.size}
+                                                {new Date(
+                                                  doc.uploadDate
+                                                ).toLocaleDateString()}{" "}
+                                                •{" "}
+                                                {(
+                                                  doc.size /
+                                                  1024 /
+                                                  1024
+                                                ).toFixed(1)}{" "}
+                                                MB
                                               </p>
                                               <button className="w-full py-2 px-3 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors">
                                                 Download
