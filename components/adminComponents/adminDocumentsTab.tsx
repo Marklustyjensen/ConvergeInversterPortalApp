@@ -2,23 +2,52 @@
 
 import { useState, useEffect } from "react";
 
+interface Property {
+  id: string;
+  name: string;
+  code: string;
+}
+
 interface Document {
   id: string;
   name: string;
+  originalName: string;
   type: string;
   size: number;
-  uploadDate: string;
   url: string;
+  propertyId: string;
+  property: Property;
+  documentType: string;
+  year: number;
+  month: number;
+  uploadDate: string;
+  uploadedBy: string;
+}
+
+interface UploadModalData {
+  propertyId: string;
+  year: number;
+  month: number;
+  documentType: string;
 }
 
 export default function AdminDocumentsTab() {
   const [documents, setDocuments] = useState<Document[]>([]);
+  const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
-  const [dragActive, setDragActive] = useState(false);
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [selectedFiles, setSelectedFiles] = useState<FileList | null>(null);
+  const [uploadModalData, setUploadModalData] = useState<UploadModalData>({
+    propertyId: "",
+    year: new Date().getFullYear(),
+    month: new Date().getMonth() + 1,
+    documentType: "financial",
+  });
 
   useEffect(() => {
     fetchDocuments();
+    fetchProperties();
   }, []);
 
   const fetchDocuments = async () => {
@@ -35,16 +64,54 @@ export default function AdminDocumentsTab() {
     }
   };
 
-  const handleFileUpload = async (files: FileList | null) => {
-    if (!files || files.length === 0) return;
+  const fetchProperties = async () => {
+    try {
+      const response = await fetch("/api/admin/properties");
+      if (response.ok) {
+        const data = await response.json();
+        setProperties(data);
+      }
+    } catch (error) {
+      console.error("Error fetching properties:", error);
+    }
+  };
+
+  const handleUploadClick = () => {
+    const fileInput = document.createElement("input");
+    fileInput.type = "file";
+    fileInput.multiple = true;
+    fileInput.accept =
+      ".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.gif";
+    fileInput.onchange = (e) => {
+      const target = e.target as HTMLInputElement;
+      if (target.files && target.files.length > 0) {
+        setSelectedFiles(target.files);
+        setShowUploadModal(true);
+      }
+    };
+    fileInput.click();
+  };
+
+  const handleFileUpload = async () => {
+    if (!selectedFiles || selectedFiles.length === 0) return;
+    if (!uploadModalData.propertyId) {
+      alert("Please select a property");
+      return;
+    }
 
     setUploading(true);
     const formData = new FormData();
 
     // Add all files to FormData
-    Array.from(files).forEach((file) => {
+    Array.from(selectedFiles).forEach((file) => {
       formData.append("files", file);
     });
+
+    // Add metadata
+    formData.append("propertyId", uploadModalData.propertyId);
+    formData.append("year", uploadModalData.year.toString());
+    formData.append("month", uploadModalData.month.toString());
+    formData.append("documentType", uploadModalData.documentType);
 
     try {
       const response = await fetch("/api/admin/documents/upload", {
@@ -54,7 +121,15 @@ export default function AdminDocumentsTab() {
 
       if (response.ok) {
         await fetchDocuments();
-        alert(`Successfully uploaded ${files.length} file(s)!`);
+        alert(`Successfully uploaded ${selectedFiles.length} file(s)!`);
+        setShowUploadModal(false);
+        setSelectedFiles(null);
+        setUploadModalData({
+          propertyId: "",
+          year: new Date().getFullYear(),
+          month: new Date().getMonth() + 1,
+          documentType: "financial",
+        });
       } else {
         const error = await response.json();
         alert(`Error uploading files: ${error.message}`);
@@ -97,22 +172,6 @@ export default function AdminDocumentsTab() {
     }
   };
 
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    setDragActive(true);
-  };
-
-  const handleDragLeave = (e: React.DragEvent) => {
-    e.preventDefault();
-    setDragActive(false);
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setDragActive(false);
-    handleFileUpload(e.dataTransfer.files);
-  };
-
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return "0 Bytes";
     const k = 1024;
@@ -129,6 +188,28 @@ export default function AdminDocumentsTab() {
     if (type.includes("presentation") || type.includes("powerpoint"))
       return "📊";
     return "📁";
+  };
+
+  const getDocumentTypeDisplay = (type: string) => {
+    return type === "financial" ? "Financial" : "Star Report";
+  };
+
+  const getMonthName = (month: number) => {
+    const months = [
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December",
+    ];
+    return months[month - 1];
   };
 
   if (loading) {
@@ -152,54 +233,167 @@ export default function AdminDocumentsTab() {
         </p>
       </div>
 
-      {/* Upload Area */}
+      {/* Upload Button */}
       <div className="luxury-card p-6">
         <h3 className="text-lg font-semibold text-slate-800 mb-4">
           Upload Documents
         </h3>
-        <div
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          onDrop={handleDrop}
-          className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
-            dragActive
-              ? "border-blue-500 bg-blue-50"
-              : "border-slate-300 hover:border-slate-400"
-          }`}
+        <button
+          onClick={handleUploadClick}
+          className="btn-primary inline-flex items-center space-x-2"
+          disabled={uploading}
         >
-          {uploading ? (
-            <div>
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-              <p className="text-slate-600">Uploading documents...</p>
-            </div>
-          ) : (
-            <div>
-              <div className="text-4xl mb-4">📁</div>
-              <p className="text-lg text-slate-800 mb-2">
-                Drag and drop files here, or click to select
-              </p>
-              <p className="text-sm text-slate-500 mb-4">
-                Supports PDF, images, documents, and more
-              </p>
-              <input
-                type="file"
-                multiple
-                onChange={(e) => handleFileUpload(e.target.files)}
-                className="hidden"
-                id="file-upload"
-                accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.gif"
-              />
-              <label
-                htmlFor="file-upload"
-                className="btn-primary cursor-pointer inline-flex items-center space-x-2"
-              >
-                <span>📤</span>
-                <span>Select Files</span>
-              </label>
-            </div>
-          )}
-        </div>
+          <span>📤</span>
+          <span>Upload Files</span>
+        </button>
+        <p className="text-sm text-slate-500 mt-2">
+          Supports PDF, images, documents, and more. You'll be prompted to
+          select property, date, and document type.
+        </p>
       </div>
+
+      {/* Upload Modal */}
+      {showUploadModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold text-slate-800 mb-4">
+              Upload Document Details
+            </h3>
+
+            {selectedFiles && (
+              <div className="mb-4">
+                <p className="text-sm text-slate-600 mb-2">
+                  Selected files ({selectedFiles.length}):
+                </p>
+                <div className="max-h-20 overflow-y-auto text-xs text-slate-500">
+                  {Array.from(selectedFiles).map((file, index) => (
+                    <div key={index}>{file.name}</div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="space-y-4">
+              {/* Property Selection */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Property *
+                </label>
+                <select
+                  value={uploadModalData.propertyId}
+                  onChange={(e) =>
+                    setUploadModalData({
+                      ...uploadModalData,
+                      propertyId: e.target.value,
+                    })
+                  }
+                  className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                >
+                  <option value="">Select a property</option>
+                  {properties.map((property) => (
+                    <option key={property.id} value={property.id}>
+                      {property.name} ({property.code})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Year Selection */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Year *
+                </label>
+                <select
+                  value={uploadModalData.year}
+                  onChange={(e) =>
+                    setUploadModalData({
+                      ...uploadModalData,
+                      year: parseInt(e.target.value),
+                    })
+                  }
+                  className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  {Array.from({ length: 10 }, (_, i) => {
+                    const year = new Date().getFullYear() - i;
+                    return (
+                      <option key={year} value={year}>
+                        {year}
+                      </option>
+                    );
+                  })}
+                </select>
+              </div>
+
+              {/* Month Selection */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Month *
+                </label>
+                <select
+                  value={uploadModalData.month}
+                  onChange={(e) =>
+                    setUploadModalData({
+                      ...uploadModalData,
+                      month: parseInt(e.target.value),
+                    })
+                  }
+                  className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  {Array.from({ length: 12 }, (_, i) => {
+                    const month = i + 1;
+                    return (
+                      <option key={month} value={month}>
+                        {getMonthName(month)}
+                      </option>
+                    );
+                  })}
+                </select>
+              </div>
+
+              {/* Document Type Selection */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Document Type *
+                </label>
+                <select
+                  value={uploadModalData.documentType}
+                  onChange={(e) =>
+                    setUploadModalData({
+                      ...uploadModalData,
+                      documentType: e.target.value,
+                    })
+                  }
+                  className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="financial">Financial Document</option>
+                  <option value="star_report">Star Report</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="flex justify-end space-x-3 mt-6">
+              <button
+                onClick={() => {
+                  setShowUploadModal(false);
+                  setSelectedFiles(null);
+                }}
+                className="px-4 py-2 text-slate-600 hover:text-slate-800 transition-colors"
+                disabled={uploading}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleFileUpload}
+                className="btn-primary"
+                disabled={uploading || !uploadModalData.propertyId}
+              >
+                {uploading ? "Uploading..." : "Upload"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Documents List */}
       <div className="luxury-card">
@@ -217,7 +411,13 @@ export default function AdminDocumentsTab() {
                     Document
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                    Property
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                     Type
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                    Date
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                     Size
@@ -240,15 +440,26 @@ export default function AdminDocumentsTab() {
                         </span>
                         <div>
                           <div className="text-sm font-medium text-slate-900">
-                            {document.name}
+                            {document.originalName}
                           </div>
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-slate-900">
+                        {document.property.name}
+                      </div>
+                      <div className="text-xs text-slate-500">
+                        {document.property.code}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800">
-                        {document.type}
+                        {getDocumentTypeDisplay(document.documentType)}
                       </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">
+                      {getMonthName(document.month)} {document.year}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">
                       {formatFileSize(document.size)}
@@ -267,7 +478,10 @@ export default function AdminDocumentsTab() {
                       </a>
                       <button
                         onClick={() =>
-                          handleDeleteDocument(document.id, document.name)
+                          handleDeleteDocument(
+                            document.id,
+                            document.originalName
+                          )
                         }
                         className="text-red-600 hover:text-red-900"
                       >
@@ -292,19 +506,20 @@ export default function AdminDocumentsTab() {
         )}
       </div>
 
-      {/* Note about online server */}
-      <div className="luxury-card p-6 bg-yellow-50 border-yellow-200">
+      {/* Integration Note */}
+      <div className="luxury-card p-6 bg-blue-50 border-blue-200">
         <div className="flex items-start space-x-3">
-          <span className="text-2xl">⚠️</span>
+          <span className="text-2xl">💡</span>
           <div>
-            <h3 className="text-lg font-semibold text-yellow-800 mb-2">
-              Online Server Setup Required
+            <h3 className="text-lg font-semibold text-blue-800 mb-2">
+              Vercel Blob Storage Integration
             </h3>
-            <p className="text-yellow-700">
-              Document upload functionality is ready, but requires an online
-              server setup for file storage. Currently configured for local
-              development. Please configure cloud storage (AWS S3, Google Cloud
-              Storage, etc.) for production use.
+            <p className="text-blue-700">
+              The document upload system is now configured to work with Vercel
+              Blob storage. Files are organized by property, year, month, and
+              document type for easy retrieval in the investor portal. Make sure
+              to configure your Vercel Blob storage environment variables for
+              production use.
             </p>
           </div>
         </div>

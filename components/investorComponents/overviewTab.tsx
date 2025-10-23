@@ -10,32 +10,20 @@ export default function OverviewTab() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  console.log("Current session:", session);
-
   useEffect(() => {
     async function fetchProperties() {
-      if (!session?.user) {
-        setLoading(false);
-        return;
-      }
+      if (!session?.user) return;
 
       try {
-        console.log("Fetching properties for user:", session.user);
         const response = await fetch("/api/properties");
-
         if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(
-            errorData.error || `HTTP ${response.status}: ${response.statusText}`
-          );
+          throw new Error("Failed to fetch properties");
         }
-
         const propertiesData = await response.json();
-        console.log("Received properties:", propertiesData);
         setProperties(propertiesData);
       } catch (err) {
+        setError("Failed to load properties");
         console.error("Error fetching properties:", err);
-        setError(err instanceof Error ? err.message : "An error occurred");
       } finally {
         setLoading(false);
       }

@@ -17,6 +17,7 @@ model User {
   resetToken       String?
   resetTokenExpiry DateTime?
   userProperties   UserProperty[]
+  uploadedDocuments Document[]
 }
 
 model Property {
@@ -30,6 +31,7 @@ model Property {
   images         String[]
   primaryImage   String?
   userProperties UserProperty[]
+  documents      Document[]
 }
 
 model UserProperty {
@@ -40,4 +42,24 @@ model UserProperty {
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, propertyId])
+}
+
+model Document {
+  id           String   @id @default(uuid())
+  name         String
+  originalName String
+  type         String
+  size         Int
+  url          String
+  blobKey      String?
+  propertyId   String
+  property     Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  documentType String   // "financial" or "star_report"
+  year         Int
+  month        Int
+  uploadDate   DateTime @default(now())
+  uploadedBy   String
+  uploadedByUser User   @relation(fields: [uploadedBy], references: [id])
+
+  @@index([propertyId, year, month, documentType])
 }

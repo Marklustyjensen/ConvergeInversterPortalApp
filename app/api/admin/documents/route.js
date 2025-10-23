@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { options } from "@/app/api/auth/[...nextauth]/options";
+import { prisma } from "@/lib/prisma";
 
 export async function GET(request) {
   try {
@@ -10,36 +11,40 @@ export async function GET(request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // For now, return mock data since we don't have document storage set up
-    // In production, this would query your document storage system
-    const mockDocuments = [
-      {
-        id: "1",
-        name: "Q3 Financial Report.pdf",
-        type: "application/pdf",
-        size: 2048576, // 2MB in bytes
-        uploadDate: "2024-10-01T10:00:00Z",
-        url: "/documents/q3-financial-report.pdf",
-      },
-      {
-        id: "2",
-        name: "Property Investment Overview.docx",
-        type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        size: 1536000, // 1.5MB in bytes
-        uploadDate: "2024-09-28T14:30:00Z",
-        url: "/documents/property-investment-overview.docx",
-      },
-      {
-        id: "3",
-        name: "Market Analysis.xlsx",
-        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        size: 1024000, // 1MB in bytes
-        uploadDate: "2024-09-25T09:15:00Z",
-        url: "/documents/market-analysis.xlsx",
-      },
-    ];
+    const { searchParams } = new URL(request.url);
+    const propertyId = searchParams.get("propertyId");
+    const year = searchParams.get("year");
+    const month = searchParams.get("month");
+    const documentType = searchParams.get("documentType");
 
-    return NextResponse.json(mockDocuments);
+    // Build where clause for filtering
+    const whereClause = {};
+    if (propertyId) whereClause.propertyId = propertyId;
+    if (year) whereClause.year = parseInt(year);
+    if (month) whereClause.month = parseInt(month);
+    if (documentType) whereClause.documentType = documentType;
+
+    const documents = await prisma.document.findMany({
+      where: whereClause,
+      include: {
+        property: {
+          select: {
+            id: true,
+            name: true,
+            code: true,
+          },
+        },
+        uploadedByUser: {
+          select: {
+            name: true,
+            username: true,
+          },
+        },
+      },
+      orderBy: [{ year: "desc" }, { month: "desc" }, { uploadDate: "desc" }],
+    });
+
+    return NextResponse.json(documents);
   } catch (error) {
     console.error("Admin documents GET error:", error);
     return NextResponse.json(
