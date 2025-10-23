@@ -2,11 +2,18 @@
 
 import { useState, useEffect } from "react";
 
+interface ActivityItem {
+  type: string;
+  message: string;
+  date: string;
+}
+
 interface DashboardStats {
   totalUsers: number;
   totalProperties: number;
   totalInvestors: number;
   recentActivity: string[];
+  recentActivityDetailed?: ActivityItem[];
 }
 
 export default function AdminOverviewTab() {
@@ -25,14 +32,53 @@ export default function AdminOverviewTab() {
   const fetchDashboardStats = async () => {
     try {
       const response = await fetch("/api/admin/stats");
+
       if (response.ok) {
         const data = await response.json();
         setStats(data);
+      } else {
+        console.error("API error:", response.status);
       }
     } catch (error) {
       console.error("Error fetching dashboard stats:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const formatRelativeTime = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+    if (diffInSeconds < 60) {
+      return "just now";
+    } else if (diffInSeconds < 3600) {
+      const minutes = Math.floor(diffInSeconds / 60);
+      return `${minutes} minute${minutes > 1 ? "s" : ""} ago`;
+    } else if (diffInSeconds < 86400) {
+      const hours = Math.floor(diffInSeconds / 3600);
+      return `${hours} hour${hours > 1 ? "s" : ""} ago`;
+    } else if (diffInSeconds < 604800) {
+      const days = Math.floor(diffInSeconds / 86400);
+      return `${days} day${days > 1 ? "s" : ""} ago`;
+    } else {
+      return date.toLocaleDateString();
+    }
+  };
+
+  const getActivityIcon = (type: string) => {
+    switch (type) {
+      case "user_registration":
+        return "👤";
+      case "property_created":
+        return "🏢";
+      case "document_uploaded":
+        return "📄";
+      case "user_assigned":
+        return "🔗";
+      default:
+        return "📊";
     }
   };
 
@@ -132,20 +178,46 @@ export default function AdminOverviewTab() {
         </h3>
         {stats.recentActivity.length > 0 ? (
           <div className="space-y-3">
-            {stats.recentActivity.map((activity, index) => (
-              <div
-                key={index}
-                className="flex items-center space-x-3 p-3 bg-slate-50 rounded-lg"
-              >
-                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                <p className="text-sm text-slate-700">{activity}</p>
-              </div>
-            ))}
+            {stats.recentActivityDetailed &&
+            stats.recentActivityDetailed.length > 0
+              ? stats.recentActivityDetailed.map((activity, index) => (
+                  <div
+                    key={index}
+                    className="flex items-start space-x-3 p-3 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors"
+                  >
+                    <div className="text-lg flex-shrink-0 mt-0.5">
+                      {getActivityIcon(activity.type)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-slate-700 leading-relaxed">
+                        {activity.message}
+                      </p>
+                      <p className="text-xs text-slate-500 mt-1">
+                        {formatRelativeTime(activity.date)}
+                      </p>
+                    </div>
+                  </div>
+                ))
+              : stats.recentActivity.map((activity, index) => (
+                  <div
+                    key={index}
+                    className="flex items-start space-x-3 p-3 bg-slate-50 rounded-lg"
+                  >
+                    <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
+                    <div className="flex-1">
+                      <p className="text-sm text-slate-700">{activity}</p>
+                    </div>
+                  </div>
+                ))}
           </div>
         ) : (
-          <p className="text-slate-500 text-center py-4">
-            No recent activity to display.
-          </p>
+          <div className="text-center py-8">
+            <div className="text-slate-400 text-4xl mb-2">📊</div>
+            <p className="text-slate-500">No recent activity to display.</p>
+            <p className="text-xs text-slate-400 mt-1">
+              Activity from the last 30 days will appear here
+            </p>
+          </div>
         )}
       </div>
     </div>

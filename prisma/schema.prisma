@@ -16,6 +16,7 @@ model User {
   admin            Boolean        @default(false)
   resetToken       String?
   resetTokenExpiry DateTime?
+  createdAt        DateTime       @default(now())
   userProperties   UserProperty[]
   uploadedDocuments Document[]
 }
@@ -30,6 +31,7 @@ model Property {
   code           String         @unique
   images         String[]
   primaryImage   String?
+  createdAt      DateTime       @default(now())
   userProperties UserProperty[]
   documents      Document[]
 }
@@ -38,6 +40,7 @@ model UserProperty {
   id         String   @id @default(uuid())
   userId     String
   propertyId String
+  createdAt  DateTime @default(now())
   property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 

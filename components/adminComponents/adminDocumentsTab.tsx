@@ -507,7 +507,7 @@ export default function AdminDocumentsTab() {
       </div>
 
       {/* Integration Note */}
-      <div className="luxury-card p-6 bg-blue-50 border-blue-200">
+      {/* <div className="luxury-card p-6 bg-blue-50 border-blue-200">
         <div className="flex items-start space-x-3">
           <span className="text-2xl">💡</span>
           <div>
@@ -523,7 +523,7 @@ export default function AdminDocumentsTab() {
             </p>
           </div>
         </div>
-      </div>
+      </div> */}
     </div>
   );
 }
