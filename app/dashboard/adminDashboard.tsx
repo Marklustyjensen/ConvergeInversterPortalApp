@@ -9,6 +9,7 @@ import AdminUsersTab from "@/components/adminComponents/adminUsersTab";
 import AdminPropertiesTab from "@/components/adminComponents/adminPropertiesTab";
 import AdminDocumentsTab from "@/components/adminComponents/adminDocumentsTab";
 import AdminOverviewTab from "@/components/adminComponents/adminOverviewTab";
+import AdminMessagesTab from "@/components/adminComponents/adminMessagesTab";
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("overview");
@@ -48,11 +49,15 @@ export default function AdminDashboard() {
         {/* Documents Management Tab */}
         {activeTab === "documents" && <AdminDocumentsTab />}
 
+        {/* Messages Management Tab */}
+        {activeTab === "messages" && <AdminMessagesTab />}
+
         {/* Placeholder for other tabs */}
         {activeTab !== "overview" &&
           activeTab !== "users" &&
           activeTab !== "properties" &&
-          activeTab !== "documents" && (
+          activeTab !== "documents" &&
+          activeTab !== "messages" && (
             <div className="luxury-card p-8 text-center">
               <h2 className="text-2xl font-bold text-slate-800 mb-4">
                 {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Section

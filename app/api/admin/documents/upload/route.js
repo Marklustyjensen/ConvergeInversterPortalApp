@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { options } from "@/app/api/auth/[...nextauth]/options";
+import { options } from "@/app/api/auth/[...nextauth]/options.js";
 import { prisma } from "@/lib/prisma";
 import { put } from "@vercel/blob";
 import { sendDocumentUploadNotifications } from "@/lib/emailService";

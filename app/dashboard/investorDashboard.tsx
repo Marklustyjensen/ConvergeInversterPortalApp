@@ -1,17 +1,39 @@
 "use client";
 
-import { useState } from "react";
-import { signOut } from "next-auth/react";
+import { useState, useEffect } from "react";
+import { signOut, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import DashboardHeader from "@/components/investorComponents/header";
 import DashboardMenuTabs from "@/components/investorComponents/menuTabs";
 import OverviewTab from "@/components/investorComponents/overviewTab";
 import DocumentTab from "@/components/investorComponents/documentTab";
 import StarReportTab from "@/components/investorComponents/startReportTab";
+import MessageTab from "@/components/investorComponents/messageTab";
+import { Property } from "@/types/property";
 
 export default function InvestorDashboard() {
   const [activeTab, setActiveTab] = useState("overview");
+  const [userProperties, setUserProperties] = useState<Property[]>([]);
+  const { data: session } = useSession();
   const router = useRouter();
+
+  useEffect(() => {
+    async function fetchUserProperties() {
+      if (!session?.user) return;
+
+      try {
+        const response = await fetch("/api/properties");
+        if (response.ok) {
+          const propertiesData = await response.json();
+          setUserProperties(propertiesData);
+        }
+      } catch (error) {
+        console.error("Error fetching user properties:", error);
+      }
+    }
+
+    fetchUserProperties();
+  }, [session]);
 
   const handleSignOut = async () => {
     try {
@@ -46,10 +68,16 @@ export default function InvestorDashboard() {
         {/* Documents Tab */}
         {activeTab === "documents" && <DocumentTab />}
 
+        {/* Messages Tab */}
+        {activeTab === "messages" && (
+          <MessageTab userProperties={userProperties} />
+        )}
+
         {/* Placeholder for other tabs */}
         {activeTab !== "overview" &&
           activeTab !== "documents" &&
-          activeTab !== "star report" && (
+          activeTab !== "star report" &&
+          activeTab !== "messages" && (
             <div className="luxury-card p-8 text-center">
               <h2 className="text-2xl font-bold text-slate-800 mb-4">
                 {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Section

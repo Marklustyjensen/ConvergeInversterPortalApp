@@ -14,6 +14,7 @@ export default function AdminMenuTabs({
     { id: "users", label: "Users", icon: "👥" },
     { id: "properties", label: "Properties", icon: "🏢" },
     { id: "documents", label: "Documents", icon: "📄" },
+    { id: "messages", label: "Messages", icon: "✉️" },
   ];
 
   return (

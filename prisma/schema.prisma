@@ -19,6 +19,8 @@ model User {
   createdAt        DateTime       @default(now())
   userProperties   UserProperty[]
   uploadedDocuments Document[]
+  sentMessages     Message[]      @relation("MessageSender")
+  receivedMessages Message[]      @relation("MessageRecipient")
 }
 
 model Property {
@@ -34,6 +36,7 @@ model Property {
   createdAt      DateTime       @default(now())
   userProperties UserProperty[]
   documents      Document[]
+  messages       Message[]
 }
 
 model UserProperty {
@@ -65,4 +68,22 @@ model Document {
   uploadedByUser User   @relation(fields: [uploadedBy], references: [id])
 
   @@index([propertyId, year, month, documentType])
+}
+
+model Message {
+  id                String    @id @default(uuid())
+  subject           String
+  message           String    @db.Text
+  propertyId        String
+  property          Property  @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  senderId          String
+  sender            User      @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  recipientId       String?
+  recipient         User?     @relation("MessageRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
+  emailNotification Boolean   @default(false)
+  isRead            Boolean   @default(false)
+  sentDate          DateTime  @default(now())
+  readDate          DateTime?
+
+  @@index([propertyId, recipientId])
 }

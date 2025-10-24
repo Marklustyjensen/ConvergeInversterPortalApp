@@ -123,6 +123,58 @@ export async function sendDocumentUploadNotifications({
 }
 
 /**
+ * Generic email sending function
+ */
+export async function sendEmail({
+  to,
+  subject,
+  html,
+  text,
+}: {
+  to: string;
+  subject: string;
+  html?: string;
+  text?: string;
+}) {
+  try {
+    if (!validateEmailConfig()) {
+      throw new Error("Email service not properly configured");
+    }
+
+    const fromEmail = process.env.RESEND_FROM_EMAIL || "noreply@example.com";
+
+    const emailData: any = {
+      from: fromEmail,
+      to: [to],
+      subject: subject,
+    };
+
+    if (html) {
+      emailData.html = html;
+    }
+    if (text) {
+      emailData.text = text;
+    } else if (!html) {
+      // If neither html nor text is provided, use subject as text
+      emailData.text = subject;
+    }
+
+    const result = await resend.emails.send(emailData);
+
+    return {
+      success: true,
+      result,
+    };
+  } catch (error) {
+    console.error("Error sending email:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+}
+
+/**
  * Validates that email service is properly configured
  */
 export function validateEmailConfig() {
