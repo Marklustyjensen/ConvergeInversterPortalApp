@@ -5,8 +5,22 @@
 const PROPERTY_IMAGES_BASE_PATH = "/images/properties/";
 
 /**
+ * Check if a string is a valid URL
+ * @param string - The string to check
+ * @returns boolean indicating if the string is a valid URL
+ */
+function isValidUrl(string: string): boolean {
+  try {
+    new URL(string);
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
+/**
  * Get the full URL for a property image
- * @param filename - The image filename stored in the database
+ * @param filename - The image filename or URL stored in the database
  * @returns Full URL path to the image
  */
 export function getPropertyImageUrl(
@@ -15,6 +29,13 @@ export function getPropertyImageUrl(
   if (!filename) {
     return "/images/placeholder-property.svg"; // Default placeholder
   }
+
+  // If it's already a full URL (Vercel Blob), return as is
+  if (isValidUrl(filename)) {
+    return filename;
+  }
+
+  // Otherwise, treat as local filename
   return `${PROPERTY_IMAGES_BASE_PATH}${filename}`;
 }
 
@@ -62,4 +83,26 @@ export function getPrimaryImageUrl(property: {
  */
 export function extractImageFilename(fullPath: string): string {
   return fullPath.split("/").pop() || "";
+}
+
+/**
+ * Check if an image URL is stored in Vercel Blob
+ * @param url - The image URL to check
+ * @returns boolean indicating if it's a Vercel Blob URL
+ */
+export function isBlobUrl(url: string): boolean {
+  return url.startsWith("https://") && url.includes("vercel-storage.com");
+}
+
+/**
+ * Migrate local images to Vercel Blob (utility for future use)
+ * @param localImagePaths - Array of local image paths to migrate
+ * @returns Promise resolving to array of new Blob URLs
+ */
+export async function migrateImagesToBlob(
+  localImagePaths: string[]
+): Promise<string[]> {
+  // This is a placeholder for future migration functionality
+  console.log("Image migration not implemented yet:", localImagePaths);
+  return localImagePaths;
 }

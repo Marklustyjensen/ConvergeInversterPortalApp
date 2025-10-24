@@ -1,18 +1,10 @@
 import Link from "next/link";
 import Image from "next/image";
+import { getPrimaryImageUrl } from "../../lib/imageUtils";
 
 export default function PropertyCard({ property }) {
-  // Array of available property images
-  const propertyImages = [
-    "Courtyard Sherman - Sherman, TX.webp",
-    "Fairfield Inn & Suites by Marriott - Aurora, CO.webp",
-    "Fairfield Inn & Suites by Marriott - Des Moines, IA.webp",
-    "La Posada Lodge & Casitas - Tucson, AZ.webp",
-  ];
-
-  // Get a random image or use property-specific image if available
-  const randomImage =
-    propertyImages[Math.floor(Math.random() * propertyImages.length)];
+  // Get the primary image URL for the property
+  const imageUrl = getPrimaryImageUrl(property);
 
   return (
     <>
@@ -22,8 +14,8 @@ export default function PropertyCard({ property }) {
             {/* Property Image */}
             <div className="w-48 flex-shrink-0 rounded-xl overflow-hidden">
               <Image
-                src={`/images/properties/${randomImage}`}
-                alt="Property Image"
+                src={imageUrl}
+                alt={property?.name || "Property Image"}
                 width={192}
                 height={160}
                 className="w-full h-full object-contain rounded-l-xl"

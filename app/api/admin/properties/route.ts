@@ -4,7 +4,7 @@ import { options } from "@/app/api/auth/[...nextauth]/options";
 import { prisma } from "@/lib/prisma";
 import { uploadToBlob } from "@/lib/blobUtils";
 
-export async function GET(request) {
+export async function GET(request: Request) {
   try {
     const session = await getServerSession(options);
 
@@ -40,7 +40,7 @@ export async function GET(request) {
   }
 }
 
-export async function POST(request) {
+export async function POST(request: Request) {
   try {
     const session = await getServerSession(options);
 
@@ -51,13 +51,13 @@ export async function POST(request) {
     const formData = await request.formData();
 
     // Extract form fields
-    const name = formData.get("name");
-    const address = formData.get("address");
-    const city = formData.get("city");
-    const state = formData.get("state");
-    const zip = formData.get("zip");
-    const code = formData.get("code");
-    const imageFile = formData.get("image");
+    const name = formData.get("name") as string;
+    const address = formData.get("address") as string;
+    const city = formData.get("city") as string;
+    const state = formData.get("state") as string;
+    const zip = formData.get("zip") as string;
+    const code = formData.get("code") as string;
+    const imageFile = formData.get("image") as File | null;
 
     // Validate required fields
     if (!name || !address || !city || !state || !zip || !code) {
@@ -69,7 +69,7 @@ export async function POST(request) {
 
     // Check if property code already exists
     const existingProperty = await prisma.property.findUnique({
-      where: { code: code.toUpperCase() },
+      where: { code: code?.toUpperCase() },
     });
 
     if (existingProperty) {
@@ -79,14 +79,14 @@ export async function POST(request) {
       );
     }
 
-    let imageUrl = null;
-    let images = [];
+    let imageUrl: string | null = null;
+    let images: string[] = [];
 
     // Handle image upload if provided
     if (imageFile && imageFile instanceof File) {
       try {
         // Generate a unique filename
-        const filename = `${code.toUpperCase()}-${Date.now()}-${imageFile.name}`;
+        const filename = `${code?.toUpperCase()}-${Date.now()}-${imageFile.name}`;
         imageUrl = await uploadToBlob(imageFile, filename);
         images = [imageUrl];
       } catch (uploadError) {
@@ -106,7 +106,7 @@ export async function POST(request) {
         city,
         state,
         zip,
-        code: code.toUpperCase(),
+        code: code?.toUpperCase() || "",
         images: images,
         primaryImage: imageUrl,
       },

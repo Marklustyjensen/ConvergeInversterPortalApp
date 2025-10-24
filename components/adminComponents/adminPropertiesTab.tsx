@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { getPropertyImageUrl } from "@/lib/imageUtils";
 
 interface Property {
   id: string;
@@ -27,6 +28,7 @@ interface NewPropertyForm {
   state: string;
   zip: string;
   code: string;
+  image: File | null;
 }
 
 export default function AdminPropertiesTab() {
@@ -42,6 +44,7 @@ export default function AdminPropertiesTab() {
     state: "",
     zip: "",
     code: "",
+    image: null,
   });
 
   useEffect(() => {
@@ -73,12 +76,22 @@ export default function AdminPropertiesTab() {
 
       const method = editingProperty ? "PUT" : "POST";
 
+      // Create FormData to handle file upload
+      const formData = new FormData();
+      formData.append("name", newProperty.name);
+      formData.append("address", newProperty.address);
+      formData.append("city", newProperty.city);
+      formData.append("state", newProperty.state);
+      formData.append("zip", newProperty.zip);
+      formData.append("code", newProperty.code);
+
+      if (newProperty.image) {
+        formData.append("image", newProperty.image);
+      }
+
       const response = await fetch(url, {
         method,
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(newProperty),
+        body: formData, // Use FormData instead of JSON
       });
 
       if (response.ok) {
@@ -92,6 +105,7 @@ export default function AdminPropertiesTab() {
           state: "",
           zip: "",
           code: "",
+          image: null,
         });
         alert(
           editingProperty
@@ -156,6 +170,7 @@ export default function AdminPropertiesTab() {
       state: property.state,
       zip: property.zip,
       code: property.code,
+      image: null,
     });
     setShowCreateForm(true);
   };
@@ -170,6 +185,7 @@ export default function AdminPropertiesTab() {
       state: "",
       zip: "",
       code: "",
+      image: null,
     });
   };
 
@@ -309,6 +325,27 @@ export default function AdminPropertiesTab() {
                   required
                 />
               </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Property Image (Optional)
+                </label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0] || null;
+                    setNewProperty({
+                      ...newProperty,
+                      image: file,
+                    });
+                  }}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                />
+                <p className="text-sm text-slate-500 mt-1">
+                  Upload an image for this property. Accepted formats: JPG, PNG,
+                  GIF
+                </p>
+              </div>
               <div className="flex justify-end space-x-3 pt-4">
                 <button
                   type="button"
@@ -342,7 +379,7 @@ export default function AdminPropertiesTab() {
           <div key={property.id} className="luxury-card overflow-hidden">
             {property.primaryImage ? (
               <img
-                src={`/images/properties/${property.primaryImage}`}
+                src={getPropertyImageUrl(property.primaryImage)}
                 alt={property.name}
                 className="w-full h-48 object-cover"
               />
