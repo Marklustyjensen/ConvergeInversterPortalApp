@@ -65,9 +65,16 @@ Add the following to your `.env` file:
 ```bash
 # Vercel Blob Storage Configuration
 BLOB_READ_WRITE_TOKEN="your-vercel-blob-token-here"
+
+# Email Service Configuration (for automatic notifications)
+RESEND_API_KEY="re_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+RESEND_FROM_EMAIL="noreply@yourcompany.com"
 ```
 
 Get your Vercel Blob token from: https://vercel.com/dashboard/stores
+Get your Resend API key from: https://resend.com/api-keys
+
+See `EMAIL_SERVICE_README.md` for detailed email service setup instructions.
 
 ## API Endpoints
 
@@ -94,7 +101,8 @@ Get your Vercel Blob token from: https://vercel.com/dashboard/stores
 4. Admin clicks "Upload" to submit
 5. Files are uploaded to Vercel Blob storage
 6. Database records are created with metadata
-7. Files become immediately accessible to investors with access to the selected property
+7. **Email notifications are automatically sent to all property owners**
+8. Files become immediately accessible to investors with access to the selected property
 
 ## Security
 

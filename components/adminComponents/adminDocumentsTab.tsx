@@ -248,7 +248,8 @@ export default function AdminDocumentsTab() {
         </button>
         <p className="text-sm text-slate-500 mt-2">
           Supports PDF, images, documents, and more. You'll be prompted to
-          select property, date, and document type.
+          select property, date, and document type. Property owners will be
+          automatically notified by email.
         </p>
       </div>
 

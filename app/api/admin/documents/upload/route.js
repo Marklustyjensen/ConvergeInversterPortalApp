@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { options } from "@/app/api/auth/[...nextauth]/options";
 import { prisma } from "@/lib/prisma";
 import { put } from "@vercel/blob";
+import { sendDocumentUploadNotifications } from "@/lib/emailService";
 
 export async function POST(request) {
   try {
@@ -144,10 +145,36 @@ export async function POST(request) {
       }
     }
 
-    return NextResponse.json({
-      message: `Successfully uploaded ${uploadResults.length} file(s)`,
-      files: uploadResults,
-    });
+    // Send email notifications to property owners
+    try {
+      const emailResult = await sendDocumentUploadNotifications({
+        propertyId,
+        documentCount: uploadResults.length,
+        documentType,
+        year,
+        month,
+      });
+
+      console.log("Email notification result:", emailResult.message);
+
+      return NextResponse.json({
+        message: `Successfully uploaded ${uploadResults.length} file(s)`,
+        files: uploadResults,
+        emailNotification: emailResult,
+      });
+    } catch (emailError) {
+      console.error("Error sending email notifications:", emailError);
+
+      // Don't fail the upload if emails fail - just log it
+      return NextResponse.json({
+        message: `Successfully uploaded ${uploadResults.length} file(s)`,
+        files: uploadResults,
+        emailNotification: {
+          success: false,
+          error: "Failed to send email notifications",
+        },
+      });
+    }
   } catch (error) {
     console.error("Admin documents upload error:", error);
     return NextResponse.json(
