@@ -43,6 +43,8 @@ export async function POST(request) {
       },
     });
 
+    console.log(`Reset token for ${email}: ${resetToken}`);
+
     // Create reset URL
     const resetUrl = `${
       process.env.NEXTAUTH_URL || "http://localhost:3000"
@@ -50,7 +52,7 @@ export async function POST(request) {
 
     // Send email
     await resend.emails.send({
-      from: process.env.FROM_EMAIL || "noreply@yourdomain.com",
+      from: process.env.FROM_EMAIL || "noreply@investor.ambmar.com",
       to: email,
       subject: "Password Reset Request",
       html: `
