@@ -27,6 +27,23 @@ export async function sendDocumentUploadNotifications({
   portalUrl = process.env.NEXTAUTH_URL || "https://your-portal-domain.com",
 }: DocumentUploadNotification) {
   try {
+    console.log(
+      `📧 Starting email notification process for property: ${propertyId}`
+    );
+
+    // Validate email configuration first
+    if (!validateEmailConfig()) {
+      console.log(
+        "❌ Email service not properly configured - skipping email notifications"
+      );
+      return {
+        success: false,
+        error: "Email service not configured",
+        message: "Email notifications skipped due to configuration issues",
+      };
+    }
+    console.log("✅ Email configuration validated successfully");
+
     // Get the property details
     const property = await prisma.property.findUnique({
       where: { id: propertyId },
@@ -59,60 +76,59 @@ export async function sendDocumentUploadNotifications({
       return { success: true, message: "No users to notify" };
     }
 
-    const emailResults = [];
-
-    // Send email to each user
+    // Create array of all user emails
+    const userEmails = [];
     for (const user of users) {
-      try {
-        const emailHtml = await render(
-          DocumentUploadEmail({
-            userName: user.name || user.email,
-            propertyName: property.name,
-            documentCount,
-            documentType,
-            year,
-            month,
-            portalUrl,
-          })
-        );
-
-        const result = await resend.emails.send({
-          from: process.env.RESEND_FROM_EMAIL || "noreply@yourcompany.com",
-          to: [user.email],
-          subject: `New Document${documentCount > 1 ? "s" : ""} Available - ${property.name}`,
-          html: emailHtml,
-        });
-
-        emailResults.push({
-          userId: user.id,
-          email: user.email,
-          success: true,
-          emailId: result.data?.id,
-        });
-
-        console.log(
-          `Email sent to ${user.email} for property ${property.name}`
-        );
-      } catch (emailError) {
-        console.error(`Failed to send email to ${user.email}:`, emailError);
-        emailResults.push({
-          userId: user.id,
-          email: user.email,
-          success: false,
-          error:
-            emailError instanceof Error ? emailError.message : "Unknown error",
-        });
-      }
+      userEmails.push(user.email);
     }
 
-    const successCount = emailResults.filter((r) => r.success).length;
-    const failCount = emailResults.filter((r) => !r.success).length;
+    try {
+      // Use the first user's name as a representative or a generic greeting
+      const representativeUserName = users[0]?.name || "Investor";
 
-    return {
-      success: true,
-      message: `Sent ${successCount} email${successCount !== 1 ? "s" : ""} successfully${failCount > 0 ? `, ${failCount} failed` : ""}`,
-      results: emailResults,
-    };
+      const emailHtml = await render(
+        DocumentUploadEmail({
+          userName: representativeUserName,
+          propertyName: property.name,
+          documentCount,
+          documentType,
+          year,
+          month,
+          portalUrl,
+        })
+      );
+
+      const result = await resend.emails.send({
+        from: process.env.RESEND_FROM_EMAIL || "noreply@yourcompany.com",
+        to: userEmails,
+        subject: `New Document${documentCount > 1 ? "s" : ""} Available - ${property.name}`,
+        html: emailHtml,
+      });
+
+      console.log(
+        `Email sent to ${userEmails.length} users for property ${property.name}`
+      );
+
+      const successCount = userEmails.length;
+      const failCount = 0;
+
+      return {
+        success: true,
+        message: `Sent ${successCount} email${successCount !== 1 ? "s" : ""} successfully`,
+        emailId: result.data?.id,
+        recipientCount: userEmails.length,
+        recipients: userEmails,
+      };
+    } catch (emailError) {
+      console.error("Failed to send email:", emailError);
+      return {
+        success: false,
+        error:
+          emailError instanceof Error ? emailError.message : "Unknown error",
+        recipientCount: userEmails.length,
+        recipients: userEmails,
+      };
+    }
   } catch (error) {
     console.error("Error sending document upload notifications:", error);
     return {

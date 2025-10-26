@@ -60,7 +60,7 @@ model Document {
   blobKey      String?
   propertyId   String
   property     Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-  documentType String   // "financial" or "star_report"
+  documentType String   // "financial", "star_report", or "budget"
   year         Int
   month        Int
   uploadDate   DateTime @default(now())

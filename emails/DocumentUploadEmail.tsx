@@ -98,7 +98,7 @@ export default function DocumentUploadEmail({
           </Text>
         </Row>
         <Row style={buttonContainer}>
-          <Button href={portalUrl} style={button}>
+          <Button href={"https://investor.ambmar.com/"} style={button}>
             Sign In to Portal
           </Button>
         </Row>

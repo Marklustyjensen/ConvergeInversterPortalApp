@@ -13,6 +13,7 @@ export default function MenuTabs({ activeTab, setActiveTab }: MenuTabsProps) {
               { id: "overview", label: "Portfolio Overview", icon: "📊" },
               { id: "star report", label: "Star Report", icon: "📈" },
               { id: "documents", label: "Documents", icon: "📄" },
+              { id: "budgets", label: "Budgets", icon: "💰" },
               { id: "messages", label: "Messages", icon: "✉️" },
               // { id: "statements", label: "Statements", icon: "🧾" },
               // { id: "settings", label: "Settings", icon: "⚙️" },

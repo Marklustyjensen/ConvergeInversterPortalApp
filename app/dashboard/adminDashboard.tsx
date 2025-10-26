@@ -8,6 +8,7 @@ import AdminMenuTabs from "@/components/adminComponents/adminMenuTabs";
 import AdminUsersTab from "@/components/adminComponents/adminUsersTab";
 import AdminPropertiesTab from "@/components/adminComponents/adminPropertiesTab";
 import AdminDocumentsTab from "@/components/adminComponents/adminDocumentsTab";
+import AdminBudgetTab from "@/components/adminComponents/adminBudgetTab";
 import AdminOverviewTab from "@/components/adminComponents/adminOverviewTab";
 import AdminMessagesTab from "@/components/adminComponents/adminMessagesTab";
 
@@ -49,6 +50,9 @@ export default function AdminDashboard() {
         {/* Documents Management Tab */}
         {activeTab === "documents" && <AdminDocumentsTab />}
 
+        {/* Budgets Management Tab */}
+        {activeTab === "budgets" && <AdminBudgetTab />}
+
         {/* Messages Management Tab */}
         {activeTab === "messages" && <AdminMessagesTab />}
 
@@ -57,6 +61,7 @@ export default function AdminDashboard() {
           activeTab !== "users" &&
           activeTab !== "properties" &&
           activeTab !== "documents" &&
+          activeTab !== "budgets" &&
           activeTab !== "messages" && (
             <div className="luxury-card p-8 text-center">
               <h2 className="text-2xl font-bold text-slate-800 mb-4">

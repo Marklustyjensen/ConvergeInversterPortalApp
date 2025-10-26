@@ -8,6 +8,7 @@ import DashboardMenuTabs from "@/components/investorComponents/menuTabs";
 import OverviewTab from "@/components/investorComponents/overviewTab";
 import DocumentTab from "@/components/investorComponents/documentTab";
 import StarReportTab from "@/components/investorComponents/startReportTab";
+import BudgetTab from "@/components/investorComponents/budgetTab";
 import MessageTab from "@/components/investorComponents/messageTab";
 import { Property } from "@/types/property";
 
@@ -65,6 +66,9 @@ export default function InvestorDashboard() {
         {/* Star Report Tab */}
         {activeTab === "star report" && <StarReportTab />}
 
+        {/* Budget Tab */}
+        {activeTab === "budgets" && <BudgetTab />}
+
         {/* Documents Tab */}
         {activeTab === "documents" && <DocumentTab />}
 
@@ -77,6 +81,7 @@ export default function InvestorDashboard() {
         {activeTab !== "overview" &&
           activeTab !== "documents" &&
           activeTab !== "star report" &&
+          activeTab !== "budgets" &&
           activeTab !== "messages" && (
             <div className="luxury-card p-8 text-center">
               <h2 className="text-2xl font-bold text-slate-800 mb-4">

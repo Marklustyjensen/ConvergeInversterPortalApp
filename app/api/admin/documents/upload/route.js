@@ -147,6 +147,13 @@ export async function POST(request) {
 
     // Send email notifications to property owners
     try {
+      console.log(
+        `📧 Attempting to send email notifications for property: ${propertyId}`
+      );
+      console.log(
+        `📄 Document details: ${uploadResults.length} ${documentType} documents for ${year}/${month}`
+      );
+
       const emailResult = await sendDocumentUploadNotifications({
         propertyId,
         documentCount: uploadResults.length,
@@ -155,7 +162,8 @@ export async function POST(request) {
         month,
       });
 
-      console.log("Email notification result:", emailResult.message);
+      console.log("📧 Email notification result:", emailResult);
+      console.log("📧 Email notification message:", emailResult.message);
 
       return NextResponse.json({
         message: `Successfully uploaded ${uploadResults.length} file(s)`,
