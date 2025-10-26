@@ -47,6 +47,7 @@ export default function AdminUsersTab({ quickAction }: AdminUsersTabProps) {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [creating, setCreating] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [editingUser, setEditingUser] = useState<User | null>(null);
   const [newUser, setNewUser] = useState<NewUserForm>({
     name: "",
     username: "",
@@ -98,17 +99,30 @@ export default function AdminUsersTab({ quickAction }: AdminUsersTabProps) {
     setCreating(true);
 
     try {
-      const response = await fetch("/api/admin/users", {
-        method: "POST",
+      const url = editingUser
+        ? `/api/admin/users/${editingUser.id}`
+        : "/api/admin/users";
+
+      const method = editingUser ? "PUT" : "POST";
+
+      // For editing, don't send password if it's empty
+      const userData: any = { ...newUser };
+      if (editingUser && !userData.password) {
+        delete userData.password;
+      }
+
+      const response = await fetch(url, {
+        method,
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(newUser),
+        body: JSON.stringify(userData),
       });
 
       if (response.ok) {
         await fetchUsers();
         setShowCreateForm(false);
+        setEditingUser(null);
         setNewUser({
           name: "",
           username: "",
@@ -116,17 +130,50 @@ export default function AdminUsersTab({ quickAction }: AdminUsersTabProps) {
           password: "",
           admin: false,
         });
-        alert("User created successfully!");
+        alert(
+          `User ${editingUser ? "updated" : "created"} successfully!`
+        );
       } else {
         const error = await response.json();
-        alert(`Error creating user: ${error.message}`);
+        alert(
+          `Error ${editingUser ? "updating" : "creating"} user: ${error.message}`
+        );
       }
     } catch (error) {
-      console.error("Error creating user:", error);
-      alert("Error creating user. Please try again.");
+      console.error(
+        `Error ${editingUser ? "updating" : "creating"} user:`,
+        error
+      );
+      alert(
+        `Error ${editingUser ? "updating" : "creating"} user. Please try again.`
+      );
     } finally {
       setCreating(false);
     }
+  };
+
+  const handleEditUser = (user: User) => {
+    setEditingUser(user);
+    setNewUser({
+      name: user.name || "",
+      username: user.username,
+      email: user.email,
+      password: "",
+      admin: user.admin,
+    });
+    setShowCreateForm(true);
+  };
+
+  const handleCancelForm = () => {
+    setShowCreateForm(false);
+    setEditingUser(null);
+    setNewUser({
+      name: "",
+      username: "",
+      email: "",
+      password: "",
+      admin: false,
+    });
   };
 
   const handleDeleteUser = async (userId: string, username: string) => {
@@ -351,7 +398,7 @@ export default function AdminUsersTab({ quickAction }: AdminUsersTabProps) {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
             <h3 className="text-lg font-semibold text-slate-800 mb-4">
-              Create New User
+              {editingUser ? "Edit User" : "Create New User"}
             </h3>
             <form onSubmit={handleCreateUser} className="space-y-4">
               <div>
@@ -409,9 +456,14 @@ export default function AdminUsersTab({ quickAction }: AdminUsersTabProps) {
                     setNewUser({ ...newUser, password: e.target.value })
                   }
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Enter password"
-                  required
+                  placeholder={editingUser ? "Leave blank to keep current password" : "Enter password"}
+                  required={!editingUser}
                 />
+                {editingUser && (
+                  <p className="text-xs text-slate-500 mt-1">
+                    Leave blank to keep the current password unchanged
+                  </p>
+                )}
               </div>
               <div className="flex items-center">
                 <input
@@ -433,7 +485,7 @@ export default function AdminUsersTab({ quickAction }: AdminUsersTabProps) {
               <div className="flex justify-end space-x-3 pt-4">
                 <button
                   type="button"
-                  onClick={() => setShowCreateForm(false)}
+                  onClick={handleCancelForm}
                   className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800 border border-slate-300 rounded-lg hover:bg-slate-50"
                 >
                   Cancel
@@ -443,7 +495,13 @@ export default function AdminUsersTab({ quickAction }: AdminUsersTabProps) {
                   disabled={creating}
                   className="btn-primary disabled:opacity-50"
                 >
-                  {creating ? "Creating..." : "Create User"}
+                  {creating
+                    ? editingUser
+                      ? "Updating..."
+                      : "Creating..."
+                    : editingUser
+                    ? "Update User"
+                    : "Create User"}
                 </button>
               </div>
             </form>
@@ -634,6 +692,12 @@ export default function AdminUsersTab({ quickAction }: AdminUsersTabProps) {
                       )} */}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                      <button
+                        onClick={() => handleEditUser(user)}
+                        className="text-blue-600 hover:text-blue-900"
+                      >
+                        Edit
+                      </button>
                       {!user.admin && (
                         <button
                           onClick={() => openPropertyAssignModal(user)}
