@@ -22,21 +22,24 @@ export async function PUT(request, { params }) {
         AND: [
           { id: { not: userId } },
           {
-            OR: [
-              { username: username },
-              { email: email }
-            ]
-          }
-        ]
-      }
+            OR: [{ username: username }, { email: email }],
+          },
+        ],
+      },
     });
 
     if (existingUser) {
       if (existingUser.username === username) {
-        return NextResponse.json({ error: "Username already exists" }, { status: 400 });
+        return NextResponse.json(
+          { error: "Username already exists" },
+          { status: 400 }
+        );
       }
       if (existingUser.email === email) {
-        return NextResponse.json({ error: "Email already exists" }, { status: 400 });
+        return NextResponse.json(
+          { error: "Email already exists" },
+          { status: 400 }
+        );
       }
     }
 

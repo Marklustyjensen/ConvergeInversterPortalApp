@@ -130,9 +130,7 @@ export default function AdminUsersTab({ quickAction }: AdminUsersTabProps) {
           password: "",
           admin: false,
         });
-        alert(
-          `User ${editingUser ? "updated" : "created"} successfully!`
-        );
+        alert(`User ${editingUser ? "updated" : "created"} successfully!`);
       } else {
         const error = await response.json();
         alert(
@@ -456,7 +454,11 @@ export default function AdminUsersTab({ quickAction }: AdminUsersTabProps) {
                     setNewUser({ ...newUser, password: e.target.value })
                   }
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder={editingUser ? "Leave blank to keep current password" : "Enter password"}
+                  placeholder={
+                    editingUser
+                      ? "Leave blank to keep current password"
+                      : "Enter password"
+                  }
                   required={!editingUser}
                 />
                 {editingUser && (
@@ -500,8 +502,8 @@ export default function AdminUsersTab({ quickAction }: AdminUsersTabProps) {
                       ? "Updating..."
                       : "Creating..."
                     : editingUser
-                    ? "Update User"
-                    : "Create User"}
+                      ? "Update User"
+                      : "Create User"}
                 </button>
               </div>
             </form>
