@@ -34,7 +34,11 @@ interface NewUserForm {
   admin: boolean;
 }
 
-export default function AdminUsersTab() {
+interface AdminUsersTabProps {
+  quickAction?: string | null;
+}
+
+export default function AdminUsersTab({ quickAction }: AdminUsersTabProps) {
   const [users, setUsers] = useState<User[]>([]);
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
@@ -55,6 +59,13 @@ export default function AdminUsersTab() {
     fetchUsers();
     fetchProperties();
   }, []);
+
+  // Handle quick action from overview tab
+  useEffect(() => {
+    if (quickAction === "create") {
+      setShowCreateForm(true);
+    }
+  }, [quickAction]);
 
   const fetchUsers = async () => {
     try {

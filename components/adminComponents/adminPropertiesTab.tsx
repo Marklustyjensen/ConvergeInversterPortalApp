@@ -31,7 +31,13 @@ interface NewPropertyForm {
   image: File | null;
 }
 
-export default function AdminPropertiesTab() {
+interface AdminPropertiesTabProps {
+  quickAction?: string | null;
+}
+
+export default function AdminPropertiesTab({
+  quickAction,
+}: AdminPropertiesTabProps) {
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -50,6 +56,13 @@ export default function AdminPropertiesTab() {
   useEffect(() => {
     fetchProperties();
   }, []);
+
+  // Handle quick action from overview tab
+  useEffect(() => {
+    if (quickAction === "create") {
+      setShowCreateForm(true);
+    }
+  }, [quickAction]);
 
   const fetchProperties = async () => {
     try {

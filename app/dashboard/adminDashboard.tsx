@@ -14,7 +14,15 @@ import AdminMessagesTab from "@/components/adminComponents/adminMessagesTab";
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("overview");
+  const [quickAction, setQuickAction] = useState<string | null>(null);
   const router = useRouter();
+
+  const handleQuickAction = (tabName: string, action: string) => {
+    setActiveTab(tabName);
+    setQuickAction(action);
+    // Clear the action after a short delay to reset state
+    setTimeout(() => setQuickAction(null), 100);
+  };
 
   const handleSignOut = async () => {
     try {
@@ -39,16 +47,22 @@ export default function AdminDashboard() {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Overview Tab */}
-        {activeTab === "overview" && <AdminOverviewTab />}
+        {activeTab === "overview" && (
+          <AdminOverviewTab onQuickAction={handleQuickAction} />
+        )}
 
         {/* Users Management Tab */}
-        {activeTab === "users" && <AdminUsersTab />}
+        {activeTab === "users" && <AdminUsersTab quickAction={quickAction} />}
 
         {/* Properties Management Tab */}
-        {activeTab === "properties" && <AdminPropertiesTab />}
+        {activeTab === "properties" && (
+          <AdminPropertiesTab quickAction={quickAction} />
+        )}
 
         {/* Documents Management Tab */}
-        {activeTab === "documents" && <AdminDocumentsTab />}
+        {activeTab === "documents" && (
+          <AdminDocumentsTab quickAction={quickAction} />
+        )}
 
         {/* Budgets Management Tab */}
         {activeTab === "budgets" && <AdminBudgetTab />}

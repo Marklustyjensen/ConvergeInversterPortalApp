@@ -6,6 +6,8 @@ interface Property {
   id: string;
   name: string;
   code: string;
+  city: string;
+  state: string;
 }
 
 interface Document {
@@ -31,10 +33,22 @@ interface UploadModalData {
   documentType: string;
 }
 
-export default function AdminDocumentsTab() {
+interface AdminDocumentsTabProps {
+  quickAction?: string | null;
+}
+
+export default function AdminDocumentsTab({
+  quickAction,
+}: AdminDocumentsTabProps) {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [properties, setProperties] = useState<Property[]>([]);
+  const [selectedPropertyId, setSelectedPropertyId] = useState<string | null>(
+    null
+  );
+  const [expandedYears, setExpandedYears] = useState(new Set(["2025"]));
+  const [expandedMonths, setExpandedMonths] = useState(new Set());
   const [loading, setLoading] = useState(true);
+  const [documentsLoading, setDocumentsLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<FileList | null>(null);
@@ -46,13 +60,29 @@ export default function AdminDocumentsTab() {
   });
 
   useEffect(() => {
-    fetchDocuments();
     fetchProperties();
   }, []);
 
+  useEffect(() => {
+    fetchDocuments();
+  }, [selectedPropertyId]);
+
+  // Handle quick action from overview tab
+  useEffect(() => {
+    if (quickAction === "upload") {
+      handleUploadClick();
+    }
+  }, [quickAction]);
+
   const fetchDocuments = async () => {
+    setDocumentsLoading(true);
     try {
-      const response = await fetch("/api/admin/documents");
+      const params = new URLSearchParams();
+      if (selectedPropertyId) {
+        params.append("propertyId", selectedPropertyId);
+      }
+
+      const response = await fetch(`/api/admin/documents?${params}`);
       if (response.ok) {
         const data = await response.json();
         setDocuments(data);
@@ -61,6 +91,7 @@ export default function AdminDocumentsTab() {
       console.error("Error fetching documents:", error);
     } finally {
       setLoading(false);
+      setDocumentsLoading(false);
     }
   };
 
@@ -191,7 +222,22 @@ export default function AdminDocumentsTab() {
   };
 
   const getDocumentTypeDisplay = (type: string) => {
-    return type === "financial" ? "Financial" : "Star Report";
+    return type === "financial" ? "Financial Document" : "Star Report";
+  };
+
+  const getDocumentIcon = (documentType: string) => {
+    const types: { [key: string]: { bg: string; text: string } } = {
+      financial: {
+        bg: "bg-blue-100",
+        text: "text-blue-600",
+      },
+      star_report: {
+        bg: "bg-yellow-100",
+        text: "text-yellow-600",
+      },
+    };
+
+    return types[documentType] || types.financial;
   };
 
   const getMonthName = (month: number) => {
@@ -212,6 +258,63 @@ export default function AdminDocumentsTab() {
     return months[month - 1];
   };
 
+  const filteredDocuments = documents;
+
+  const documentsByYearAndMonth = filteredDocuments.reduce((acc: any, doc) => {
+    const monthNames = [
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December",
+    ];
+    const monthName = monthNames[doc.month - 1];
+
+    if (!acc[doc.year]) {
+      acc[doc.year] = {};
+    }
+    if (!acc[doc.year][monthName]) {
+      acc[doc.year][monthName] = {
+        monthIndex: doc.month - 1,
+        documents: [],
+      };
+    }
+    acc[doc.year][monthName].documents.push(doc);
+    return acc;
+  }, {});
+
+  const years = Object.keys(documentsByYearAndMonth).sort(
+    (a: any, b: any) => b - a
+  );
+
+  const toggleYear = (year: string) => {
+    const newExpandedYears = new Set(expandedYears);
+    if (newExpandedYears.has(year)) {
+      newExpandedYears.delete(year);
+    } else {
+      newExpandedYears.add(year);
+    }
+    setExpandedYears(newExpandedYears);
+  };
+
+  const toggleMonth = (year: string, month: string) => {
+    const monthKey = `${year}-${month}`;
+    const newExpandedMonths = new Set(expandedMonths);
+    if (newExpandedMonths.has(monthKey)) {
+      newExpandedMonths.delete(monthKey);
+    } else {
+      newExpandedMonths.add(monthKey);
+    }
+    setExpandedMonths(newExpandedMonths);
+  };
+
   if (loading) {
     return (
       <div className="luxury-card p-8 text-center">
@@ -223,14 +326,35 @@ export default function AdminDocumentsTab() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h2 className="text-2xl font-bold text-slate-800">
-          Document Management
-        </h2>
-        <p className="text-slate-600">
-          Upload and manage documents for the investor portal
-        </p>
+      {/* Header with Property Selector */}
+      <div className="luxury-card p-6">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h2 className="text-2xl font-bold text-slate-800">
+              Document Management
+            </h2>
+            <p className="text-slate-600">
+              Upload and manage documents for all properties
+            </p>
+          </div>
+          <div className="md:w-64">
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Select Property
+            </label>
+            <select
+              value={selectedPropertyId || ""}
+              onChange={(e) => setSelectedPropertyId(e.target.value || null)}
+              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-slate-900"
+            >
+              <option value="">All Properties</option>
+              {properties.map((property) => (
+                <option key={property.id} value={property.id}>
+                  {property.name} - {property.city}, {property.state}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
       </div>
 
       {/* Upload Button */}
@@ -400,127 +524,199 @@ export default function AdminDocumentsTab() {
       <div className="luxury-card">
         <div className="px-6 py-4 border-b border-slate-200">
           <h3 className="text-lg font-semibold text-slate-800">
-            Uploaded Documents ({documents.length})
+            Documents ({documents.length})
           </h3>
         </div>
-        {documents.length > 0 ? (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-slate-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                    Document
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                    Property
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                    Type
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                    Date
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                    Size
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                    Upload Date
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-slate-200">
-                {documents.map((document) => (
-                  <tr key={document.id} className="hover:bg-slate-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <span className="text-2xl mr-3">
-                          {getFileIcon(document.type)}
-                        </span>
-                        <div>
-                          <div className="text-sm font-medium text-slate-900">
-                            {document.originalName}
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-slate-900">
-                        {document.property.name}
-                      </div>
-                      <div className="text-xs text-slate-500">
-                        {document.property.code}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800">
-                        {getDocumentTypeDisplay(document.documentType)}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">
-                      {getMonthName(document.month)} {document.year}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">
-                      {formatFileSize(document.size)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">
-                      {new Date(document.uploadDate).toLocaleDateString()}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                      <a
-                        href={document.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-600 hover:text-blue-900"
-                      >
-                        Download
-                      </a>
-                      <button
-                        onClick={() =>
-                          handleDeleteDocument(
-                            document.id,
-                            document.originalName
-                          )
-                        }
-                        className="text-red-600 hover:text-red-900"
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        {documentsLoading ? (
+          <div className="p-8 text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
+            <p className="mt-4 text-slate-600">Loading documents...</p>
           </div>
-        ) : (
+        ) : years.length === 0 ? (
           <div className="p-8 text-center">
             <div className="text-slate-400 text-6xl mb-4">📄</div>
             <h3 className="text-lg font-semibold text-slate-800 mb-2">
               No Documents Found
             </h3>
             <p className="text-slate-600">
-              Upload your first document to get started.
+              {selectedPropertyId
+                ? "No documents available for the selected property."
+                : "No documents have been uploaded yet."}
             </p>
+          </div>
+        ) : (
+          <div className="divide-y divide-slate-200">
+            {years.map((year) => {
+              const yearData = documentsByYearAndMonth[year];
+              const isYearExpanded = expandedYears.has(year);
+              const monthsInYear = Object.keys(yearData).sort(
+                (a, b) => yearData[b].monthIndex - yearData[a].monthIndex
+              );
+
+              return (
+                <div key={year}>
+                  <button
+                    onClick={() => toggleYear(year)}
+                    className="w-full px-6 py-4 flex items-center justify-between hover:bg-slate-50 transition-colors"
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div className="text-slate-400">
+                        {isYearExpanded ? "▼" : "▶"}
+                      </div>
+                      <h3 className="text-lg font-semibold text-slate-800">
+                        {year}
+                      </h3>
+                    </div>
+                    <div className="text-sm text-slate-500">
+                      {Object.values(yearData).reduce(
+                        (total: number, month: any) =>
+                          total + month.documents.length,
+                        0
+                      )}{" "}
+                      documents
+                    </div>
+                  </button>
+
+                  {isYearExpanded && (
+                    <div className="bg-slate-50">
+                      {monthsInYear.map((month) => {
+                        const monthData = yearData[month];
+                        const monthKey = `${year}-${month}`;
+                        const isMonthExpanded = expandedMonths.has(monthKey);
+
+                        return (
+                          <div
+                            key={month}
+                            className="border-t border-slate-200"
+                          >
+                            <button
+                              onClick={() => toggleMonth(year, month)}
+                              className="w-full px-8 py-3 flex items-center justify-between hover:bg-slate-100 transition-colors"
+                            >
+                              <div className="flex items-center space-x-3">
+                                <div className="text-slate-400">
+                                  {isMonthExpanded ? "▼" : "▶"}
+                                </div>
+                                <h4 className="font-medium text-slate-700">
+                                  {month}
+                                </h4>
+                              </div>
+                              <div className="text-sm text-slate-500">
+                                {monthData.documents.length} documents
+                              </div>
+                            </button>
+
+                            {isMonthExpanded && (
+                              <div className="bg-white">
+                                {monthData.documents.map((doc: Document) => {
+                                  const docTypeInfo = getDocumentIcon(
+                                    doc.documentType
+                                  );
+
+                                  return (
+                                    <div
+                                      key={doc.id}
+                                      className="px-10 py-4 border-t border-slate-100 hover:bg-slate-50 transition-colors"
+                                    >
+                                      <div className="flex items-center justify-between">
+                                        <div className="flex items-center space-x-4">
+                                          <div
+                                            className={`p-2 rounded-lg ${docTypeInfo.bg}`}
+                                          >
+                                            <span
+                                              className={`text-sm font-medium ${docTypeInfo.text}`}
+                                            >
+                                              {doc.documentType === "financial"
+                                                ? "FIN"
+                                                : "STAR"}
+                                            </span>
+                                          </div>
+
+                                          <span className="text-2xl">
+                                            {getFileIcon(doc.type)}
+                                          </span>
+
+                                          <div>
+                                            <h5 className="font-medium text-slate-800">
+                                              {doc.originalName}
+                                            </h5>
+                                            <div className="flex items-center space-x-4 text-sm text-slate-500">
+                                              <span>
+                                                {getDocumentTypeDisplay(
+                                                  doc.documentType
+                                                )}
+                                              </span>
+                                              <span>•</span>
+                                              <span>
+                                                {formatFileSize(doc.size)}
+                                              </span>
+                                              <span>•</span>
+                                              <span>{doc.property.name}</span>
+                                              <span>•</span>
+                                              <span>
+                                                {new Date(
+                                                  doc.uploadDate
+                                                ).toLocaleDateString()}
+                                              </span>
+                                            </div>
+                                          </div>
+                                        </div>
+
+                                        <div className="flex items-center space-x-3">
+                                          <a
+                                            href={doc.url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="flex items-center space-x-2 px-3 py-1.5 text-sm text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors"
+                                          >
+                                            <span>📥</span>
+                                            <span>Download</span>
+                                          </a>
+                                          <button
+                                            onClick={() =>
+                                              handleDeleteDocument(
+                                                doc.id,
+                                                doc.originalName
+                                              )
+                                            }
+                                            className="flex items-center space-x-2 px-3 py-1.5 text-sm text-red-600 hover:text-red-800 hover:bg-red-50 rounded-md transition-colors"
+                                          >
+                                            <span>🗑️</span>
+                                            <span>Delete</span>
+                                          </button>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
 
-      {/* Integration Note */}
+      {/* Information Note */}
       {/* <div className="luxury-card p-6 bg-blue-50 border-blue-200">
         <div className="flex items-start space-x-3">
           <span className="text-2xl">💡</span>
           <div>
             <h3 className="text-lg font-semibold text-blue-800 mb-2">
-              Vercel Blob Storage Integration
+              Document Management
             </h3>
             <p className="text-blue-700">
-              The document upload system is now configured to work with Vercel
-              Blob storage. Files are organized by property, year, month, and
-              document type for easy retrieval in the investor portal. Make sure
-              to configure your Vercel Blob storage environment variables for
-              production use.
+              Documents are organized by year and month for easy navigation. Use
+              the property selector above to filter documents for a specific
+              property or view all properties. Both financial documents and star
+              reports are managed here. Investors will be automatically notified
+              by email when new documents are uploaded for their properties.
             </p>
           </div>
         </div>

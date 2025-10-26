@@ -12,15 +12,23 @@ interface DashboardStats {
   totalUsers: number;
   totalProperties: number;
   totalInvestors: number;
+  totalAdmins: number;
   recentActivity: string[];
   recentActivityDetailed?: ActivityItem[];
 }
 
-export default function AdminOverviewTab() {
+interface AdminOverviewTabProps {
+  onQuickAction?: (tabName: string, action: string) => void;
+}
+
+export default function AdminOverviewTab({
+  onQuickAction,
+}: AdminOverviewTabProps) {
   const [stats, setStats] = useState<DashboardStats>({
     totalUsers: 0,
     totalProperties: 0,
     totalInvestors: 0,
+    totalAdmins: 0,
     recentActivity: [],
   });
   const [loading, setLoading] = useState(true);
@@ -104,21 +112,7 @@ export default function AdminOverviewTab() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="luxury-card p-6">
-          <div className="flex items-center">
-            <div className="p-3 rounded-full bg-blue-100 text-blue-600">
-              <span className="text-2xl">👥</span>
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-slate-600">Total Users</p>
-              <p className="text-2xl font-bold text-slate-900">
-                {stats.totalUsers}
-              </p>
-            </div>
-          </div>
-        </div>
-
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="luxury-card p-6">
           <div className="flex items-center">
             <div className="p-3 rounded-full bg-green-100 text-green-600">
@@ -128,6 +122,20 @@ export default function AdminOverviewTab() {
               <p className="text-sm font-medium text-slate-600">Properties</p>
               <p className="text-2xl font-bold text-slate-900">
                 {stats.totalProperties}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="luxury-card p-6">
+          <div className="flex items-center">
+            <div className="p-3 rounded-full bg-blue-100 text-blue-600">
+              <span className="text-2xl">👥</span>
+            </div>
+            <div className="ml-4">
+              <p className="text-sm font-medium text-slate-600">Total Users</p>
+              <p className="text-2xl font-bold text-slate-900">
+                {stats.totalUsers}
               </p>
             </div>
           </div>
@@ -148,28 +156,51 @@ export default function AdminOverviewTab() {
             </div>
           </div>
         </div>
+
+        <div className="luxury-card p-6">
+          <div className="flex items-center">
+            <div className="p-3 rounded-full bg-orange-100 text-orange-600">
+              <span className="text-2xl">👑</span>
+            </div>
+            <div className="ml-4">
+              <p className="text-sm font-medium text-slate-600">Admin Users</p>
+              <p className="text-2xl font-bold text-slate-900">
+                {stats.totalAdmins}
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Quick Actions */}
-      {/* <div className="luxury-card p-6">
+      <div className="luxury-card p-6">
         <h3 className="text-lg font-semibold text-slate-800 mb-4">
           Quick Actions
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <button className="btn-primary flex items-center justify-center space-x-2 p-4">
+          <button
+            className="btn-primary flex items-center justify-center space-x-2 p-4"
+            onClick={() => onQuickAction?.("users", "create")}
+          >
             <span>➕</span>
             <span>Add New User</span>
           </button>
-          <button className="btn-primary flex items-center justify-center space-x-2 p-4">
+          <button
+            className="btn-primary flex items-center justify-center space-x-2 p-4"
+            onClick={() => onQuickAction?.("properties", "create")}
+          >
             <span>🏢</span>
             <span>Add New Property</span>
           </button>
-          <button className="btn-primary flex items-center justify-center space-x-2 p-4">
+          <button
+            className="btn-primary flex items-center justify-center space-x-2 p-4"
+            onClick={() => onQuickAction?.("documents", "upload")}
+          >
             <span>📄</span>
             <span>Upload Document</span>
           </button>
         </div>
-      </div> */}
+      </div>
 
       {/* Recent Activity */}
       <div className="luxury-card p-6">

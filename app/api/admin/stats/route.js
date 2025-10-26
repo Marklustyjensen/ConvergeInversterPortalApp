@@ -24,6 +24,13 @@ export async function GET(request) {
       },
     });
 
+    // Get total admin users
+    const totalAdmins = await prisma.user.count({
+      where: {
+        admin: true,
+      },
+    });
+
     // Get recent activity from the last 30 days
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
@@ -162,10 +169,10 @@ export async function GET(request) {
         });
       });
 
-      // Sort all activities by date (most recent first) and take top 10
+      // Sort all activities by date (most recent first) and take top 5
       allActivities.sort((a, b) => new Date(b.date) - new Date(a.date));
       const recentActivityMessages = allActivities
-        .slice(0, 10)
+        .slice(0, 5)
         .map((activity) => activity.message);
 
       recentActivity.push(...recentActivityMessages);
@@ -179,6 +186,7 @@ export async function GET(request) {
       totalUsers,
       totalProperties,
       totalInvestors,
+      totalAdmins,
       recentActivity,
     });
   } catch (error) {

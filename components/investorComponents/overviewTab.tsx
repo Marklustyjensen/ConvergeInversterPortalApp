@@ -39,6 +39,18 @@ interface Document {
   uploadDate: string;
 }
 
+interface ActivityMessage extends Message {
+  activityType: 'message';
+  activityDate: Date;
+}
+
+interface ActivityDocument extends Document {
+  activityType: 'document';
+  activityDate: Date;
+}
+
+type ActivityItem = ActivityMessage | ActivityDocument;
+
 export default function OverviewTab() {
   const { data: session } = useSession();
   const [properties, setProperties] = useState<Property[]>([]);
@@ -60,19 +72,41 @@ export default function OverviewTab() {
         const propertiesData = await propertiesResponse.json();
         setProperties(propertiesData);
 
-        // Fetch recent messages (limit to 3)
+        // Fetch recent messages and documents
         const messagesResponse = await fetch("/api/messages");
+        const documentsResponse = await fetch("/api/documents");
+        
+        const allActivity: ActivityItem[] = [];
+        
         if (messagesResponse.ok) {
           const messagesData = await messagesResponse.json();
-          setRecentMessages(messagesData.slice(0, 3));
+          messagesData.forEach((message: Message) => {
+            allActivity.push({
+              ...message,
+              activityType: 'message' as const,
+              activityDate: new Date(message.sentDate)
+            });
+          });
         }
 
-        // Fetch recent documents (limit to 5)
-        const documentsResponse = await fetch("/api/documents");
         if (documentsResponse.ok) {
           const documentsData = await documentsResponse.json();
-          setRecentDocuments(documentsData.slice(0, 5));
+          documentsData.forEach((document: Document) => {
+            allActivity.push({
+              ...document,
+              activityType: 'document' as const,
+              activityDate: new Date(document.uploadDate)
+            });
+          });
         }
+
+        // Sort all activity by date (most recent first) and take top 5
+        allActivity.sort((a, b) => b.activityDate.getTime() - a.activityDate.getTime());
+        const recentActivity = allActivity.slice(0, 5);
+        
+        // Separate back into messages and documents for display
+        setRecentMessages(recentActivity.filter((item): item is ActivityMessage => item.activityType === 'message'));
+        setRecentDocuments(recentActivity.filter((item): item is ActivityDocument => item.activityType === 'document'));
       } catch (err) {
         setError("Failed to load data");
         console.error("Error fetching data:", err);
