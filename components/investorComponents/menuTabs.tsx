@@ -15,6 +15,7 @@ export default function MenuTabs({ activeTab, setActiveTab }: MenuTabsProps) {
               { id: "documents", label: "Documents", icon: "📄" },
               { id: "budgets", label: "Budgets", icon: "💰" },
               { id: "messages", label: "Messages", icon: "✉️" },
+              { id: "my profile", label: "My Profile", icon: "👤" },
               // { id: "statements", label: "Statements", icon: "🧾" },
               // { id: "settings", label: "Settings", icon: "⚙️" },
             ].map((tab) => (

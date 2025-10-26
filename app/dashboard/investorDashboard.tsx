@@ -10,6 +10,7 @@ import DocumentTab from "@/components/investorComponents/documentTab";
 import StarReportTab from "@/components/investorComponents/startReportTab";
 import BudgetTab from "@/components/investorComponents/budgetTab";
 import MessageTab from "@/components/investorComponents/messageTab";
+import MyProfile from "@/components/investorComponents/myProfile";
 import { Property } from "@/types/property";
 
 export default function InvestorDashboard() {
@@ -77,12 +78,16 @@ export default function InvestorDashboard() {
           <MessageTab userProperties={userProperties} />
         )}
 
+        {/* My Profile Tab */}
+        {activeTab === "my profile" && <MyProfile />}
+
         {/* Placeholder for other tabs */}
         {activeTab !== "overview" &&
           activeTab !== "documents" &&
           activeTab !== "star report" &&
           activeTab !== "budgets" &&
-          activeTab !== "messages" && (
+          activeTab !== "messages" &&
+          activeTab !== "my profile" && (
             <div className="luxury-card p-8 text-center">
               <h2 className="text-2xl font-bold text-slate-800 mb-4">
                 {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Section
