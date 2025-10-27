@@ -47,7 +47,7 @@ export async function POST(request) {
 
     // Create reset URL
     const resetUrl = `${
-      process.env.NEXTAUTH_URL || "http://localhost:3000"
+      process.env.NEXTAUTH_URL || "https://investor.ambmar.com/"
     }/reset-password?token=${resetToken}`;
 
     // Send email
