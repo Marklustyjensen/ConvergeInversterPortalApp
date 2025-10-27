@@ -63,7 +63,7 @@ const SignIn = () => {
 
             <div className="max-w-2xl mx-auto">
               <h2 className="text-xl sm:text-2xl lg:text-3xl text-slate-600 mb-4 font-light">
-                Investor Portal test
+                Investor Portal
               </h2>
               <p className="text-lg text-slate-500 leading-relaxed">
                 Access your investment portfolio, performance metrics, and
